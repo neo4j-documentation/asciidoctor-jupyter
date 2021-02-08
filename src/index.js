@@ -1,4 +1,4 @@
-const InlineImplicitLinkRegex = /((?:https?|file|ftp|irc):\/\/[^\s\[\]<]*)(?:\[(.*)])?/
+const InlineImplicitLinkRegex = /((?:https?|file|ftp|irc):\/\/[^\s[\]<]*)(?:\[(.*)])?/
 const InlineLinkRegex = /link:(.*)\[(.*)]/
 
 class JupyterConverter {
@@ -35,19 +35,19 @@ class JupyterConverter {
       const lines = blocks.map((b) => b.convert()).filter(v => v.length !== 0).flat()
       lines.unshift('# ' + node.getDocument().getTitle() + '\n', '\n')
       return [{
-        "cell_type": "markdown",
-        "metadata": {
-          "slideshow": {
-            "slide_type": "slide"
+        cell_type: 'markdown',
+        metadata: {
+          slideshow: {
+            slide_type: 'slide'
           }
         },
-        "source": lines
+        source: lines
       }]
     } else if (nodeName === 'section') {
       const blocks = node.getBlocks()
 
       const cells = []
-      let lines = [];
+      let lines = []
       for (const block of blocks) {
         if (block.getNodeName() === 'listing') {
           if (lines.length > 0) {
@@ -55,13 +55,13 @@ class JupyterConverter {
               lines.unshift('## ' + node.getTitle() + '\n', '\n')
             }
             cells.push({
-              "cell_type": "markdown",
-              "metadata": {
-                "slideshow": {
-                  "slide_type": "slide"
+              cell_type: 'markdown',
+              metadata: {
+                slideshow: {
+                  slide_type: 'slide'
                 }
               },
-              "source": lines
+              source: lines
             })
           }
           lines = []
@@ -75,13 +75,13 @@ class JupyterConverter {
           lines.unshift('## ' + node.getTitle() + '\n', '\n')
         }
         cells.push({
-          "cell_type": "markdown",
-          "metadata": {
-            "slideshow": {
-              "slide_type": "slide"
+          cell_type: 'markdown',
+          metadata: {
+            slideshow: {
+              slide_type: 'slide'
             }
           },
-          "source": lines
+          source: lines
         })
       }
       return cells
@@ -96,7 +96,7 @@ class JupyterConverter {
         metadata: {
           collapsed: false,
           slideshow: {
-            "slide_type": 'fragment'
+            slide_type: 'fragment'
           }
         },
         outputs: [],
@@ -107,14 +107,14 @@ class JupyterConverter {
     return ''
   }
 
-  convertAsciiDocToMarkdown(line) {
-    let linkFound = line.match(InlineLinkRegex)
+  convertAsciiDocToMarkdown (line) {
+    const linkFound = line.match(InlineLinkRegex)
     if (linkFound) {
       const link = linkFound[1]
       const target = linkFound[2]
       return `[${target}](${link})`
     }
-    let implicitLinkFound = line.match(InlineImplicitLinkRegex)
+    const implicitLinkFound = line.match(InlineImplicitLinkRegex)
     if (implicitLinkFound) {
       const link = implicitLinkFound[1]
       const target = implicitLinkFound[2]
@@ -127,6 +127,6 @@ class JupyterConverter {
 module.exports = JupyterConverter
 module.exports.register = function (registry) {
   const AsciidoctorModule = registry.$$base_module
-  const ConverterFactory = AsciidoctorModule.$$['ConverterFactory']
+  const ConverterFactory = AsciidoctorModule.$$.ConverterFactory
   ConverterFactory.register(new JupyterConverter(), ['jupyter'])
 }
