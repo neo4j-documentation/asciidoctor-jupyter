@@ -1,0 +1,27 @@
+{
+  "name": "asciidoctor-jupyter",
+  "version": "1.0.0",
+  "description": "A Jupyter converter for Asciidoctor.js. Write your Notebook in AsciiDoc!",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/**.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/neo4j-documentation/asciidoctor-jupyter.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/neo4j-documentation/asciidoctor-jupyter/issues"
+  },
+  "homepage": "https://github.com/neo4j-documentation/asciidoctor-jupyter#readme",
+  "devDependencies": {
+    "@asciidoctor/core": "^2.2.1",
+    "chai": "^4.3.0",
+    "dirty-chai": "^2.0.1",
+    "mocha": "^8.2.1",
+    "standard": "^16.0.3"
+  }
+}
