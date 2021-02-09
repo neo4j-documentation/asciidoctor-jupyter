@@ -1,14 +1,7 @@
-const path = require('path')
-
-const InlineImplicitLinkRegex = /((?:https?|file|ftp|irc):\/\/[^\s[\]<]*)(?:\[(.*)])?/g
-const InlineLinkRegex = /link:(.*)\[(.*)]/g
-const InlineImageRegexp = /\\?i(?:mage|con):([^:\s\[](?:[^\n\[]*[^\s\[])?)\[(|[\s\S]*?[^\\])]/g
-
 class JupyterConverter {
-
   constructor (backend) {
     this.backend = backend
-    //this.basebackend = 'json'
+    // this.basebackend = 'json'
     this.outfilesuffix = '.ipynb'
     this.filetype = 'json'
   }
@@ -38,10 +31,8 @@ class JupyterConverter {
     }
     if (nodeName === 'paragraph') {
       const lines = node.lines
-      const length = lines.length
       return lines
-        .map(l => this.convertAsciiDocToMarkdown(l, node.getDocument()))
-        .map((l, index) => length === index + 1 ? l : l + '\n')
+        .map(l => node.applySubstitutions(l) + '\n')
     }
     if (nodeName === 'preamble') {
       const blocks = node.getBlocks()
@@ -103,7 +94,6 @@ class JupyterConverter {
       const lines = node.lines
       const length = lines.length
       const source = lines
-        .map(l => this.convertAsciiDocToMarkdown(l, node.getDocument()))
         .map((l, index) => length === index + 1 ? l : l + '\n')
       return {
         cell_type: 'code',
@@ -115,6 +105,15 @@ class JupyterConverter {
         outputs: [],
         source
       }
+    }
+    if (nodeName === 'inline_anchor') {
+      const type = node.getType()
+      if (type === 'link') {
+        return `[${node.getText()}](${node.getTarget()})`
+      }
+      // unsupported link type!
+      console.warn(`Unsupported inline_anchor type: ${type}, ignoring.`)
+      return ''
     }
     if (nodeName === 'inline_quoted') {
       const type = node.getType()
@@ -136,32 +135,22 @@ class JupyterConverter {
     if (nodeName === 'image') {
       const image = `![${node.getAttribute('alt')}](${node.getImageUri(node.getAttribute('target'))})`
       if (node.hasAttribute('link')) {
-        return `[${image}](${node.getAttribute('link')})\n`
+        return [`[${image}](${node.getAttribute('link')})\n`]
       }
-      return [image]
+      return ['\n', `${image}\n`, '\n']
     }
     if (nodeName === 'ulist' || nodeName === 'olist') {
-      const symbol = nodeName === 'ulist' ? '-' : '.'
-      return node.getItems().map((item) => {
+      const symbol = nodeName === 'ulist' ? '-' : '1.'
+      return ['\n', ...node.getItems().map((item) => {
         if (item.hasBlocks()) {
           // depth?
           return item.getContent()
         }
-        return `${symbol} ${item.getText()}`
-      })
+        return `${symbol} ${item.getText()}\n`
+      }), '\n']
     }
     console.warn(`Unsupported node: ${nodeName}, ignoring.`)
     return ''
-  }
-
-  convertAsciiDocToMarkdown (line, doc) {
-    line = line.replace(InlineLinkRegex, (match, link, target) => `[${target}](${link})`)
-    line = line.replace(InlineImplicitLinkRegex, (match, link, target) => `[${target}](${link})`)
-    line = line.replace(InlineImageRegexp, (match, link, target) => {
-      const imagesDir = doc.getAttribute('imagesdir')
-      return `![${target}](${path.join(imagesDir, link)})`
-    })
-    return line
   }
 }
 

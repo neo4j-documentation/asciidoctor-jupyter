@@ -33,6 +33,7 @@ Go to the next page to start this exercise.
 *Write a query to retrieve _all_ nodes from the database.*
 
 *Hints:*
+
 . Write the query in the query pane at the top of Neo4j Browser.
 . Click the _Run_ button image:run-button.png[] in order to execute the code.
 

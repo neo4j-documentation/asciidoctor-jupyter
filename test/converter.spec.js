@@ -21,10 +21,15 @@ describe('Jupyter converter', () => {
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('2.7.10')
     expect(ipynb.cells.length).is.equal(35)
+    const codeCells = ipynb.cells.filter(cell => cell.cell_type === 'code')
+    expect(codeCells.length).is.equal(21)
+    expect(codeCells[0].source.join('')).is.equal(`from py2neo import Graph
+
+graph = Graph()`)
     // await fs.writeFile('hello-world.ipynb', result, 'utf8')
     // console.log(util.inspect(ipynb, false, Infinity, true))
   })
-  it('should convert an exercice guide to ipynb', async () => {
+  it('should convert an exercise guide to ipynb', async () => {
     asciidoctor.ConverterFactory.register(new JupyterConverter(), ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'intro-neo4j-guides-01.adoc')
     const result = asciidoctor.convertFile(inputFile, {
