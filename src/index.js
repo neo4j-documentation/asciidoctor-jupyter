@@ -1,7 +1,18 @@
-const InlineImplicitLinkRegex = /((?:https?|file|ftp|irc):\/\/[^\s[\]<]*)(?:\[(.*)])?/
-const InlineLinkRegex = /link:(.*)\[(.*)]/
+const path = require('path')
+
+const InlineImplicitLinkRegex = /((?:https?|file|ftp|irc):\/\/[^\s[\]<]*)(?:\[(.*)])?/g
+const InlineLinkRegex = /link:(.*)\[(.*)]/g
+const InlineImageRegexp = /\\?i(?:mage|con):([^:\s\[](?:[^\n\[]*[^\s\[])?)\[(|[\s\S]*?[^\\])]/g
 
 class JupyterConverter {
+
+  constructor (backend) {
+    this.backend = backend
+    //this.basebackend = 'json'
+    this.outfilesuffix = '.ipynb'
+    this.filetype = 'json'
+  }
+
   convert (node, transform) {
     const nodeName = transform || node.getNodeName()
     if (nodeName === 'document' || nodeName === 'embedded') {
@@ -24,13 +35,15 @@ class JupyterConverter {
         nbformat_minor: 5
       }
       return JSON.stringify(result)
-    } else if (nodeName === 'paragraph') {
+    }
+    if (nodeName === 'paragraph') {
       const lines = node.lines
       const length = lines.length
-      return node.lines
-        .map(l => this.convertAsciiDocToMarkdown(l))
+      return lines
+        .map(l => this.convertAsciiDocToMarkdown(l, node.getDocument()))
         .map((l, index) => length === index + 1 ? l : l + '\n')
-    } else if (nodeName === 'preamble') {
+    }
+    if (nodeName === 'preamble') {
       const blocks = node.getBlocks()
       const lines = blocks.map((b) => b.convert()).filter(v => v.length !== 0).flat()
       lines.unshift('# ' + node.getDocument().getTitle() + '\n', '\n')
@@ -43,9 +56,9 @@ class JupyterConverter {
         },
         source: lines
       }]
-    } else if (nodeName === 'section') {
+    }
+    if (nodeName === 'section') {
       const blocks = node.getBlocks()
-
       const cells = []
       let lines = []
       for (const block of blocks) {
@@ -85,16 +98,16 @@ class JupyterConverter {
         })
       }
       return cells
-    } else if (nodeName === 'listing') {
+    }
+    if (nodeName === 'listing') {
       const lines = node.lines
       const length = lines.length
-      const source = node.lines
-        .map(l => this.convertAsciiDocToMarkdown(l))
+      const source = lines
+        .map(l => this.convertAsciiDocToMarkdown(l, node.getDocument()))
         .map((l, index) => length === index + 1 ? l : l + '\n')
       return {
         cell_type: 'code',
         metadata: {
-          collapsed: false,
           slideshow: {
             slide_type: 'fragment'
           }
@@ -103,23 +116,51 @@ class JupyterConverter {
         source
       }
     }
+    if (nodeName === 'inline_quoted') {
+      const type = node.getType()
+      if (type === 'emphasis' || type === 'monospaced') {
+        // nothing to do
+        return node.getText()
+      } else if (type === 'strong') {
+        return `**${node.getText()}**`
+      }
+      return node.getText()
+    }
+    if (nodeName === 'inline_image') {
+      const image = `![${node.getAttribute('alt')}](${node.getImageUri(node.getTarget())})`
+      if (node.hasAttribute('link')) {
+        return `[${image}](${node.getAttribute('link')})`
+      }
+      return image
+    }
+    if (nodeName === 'image') {
+      const image = `![${node.getAttribute('alt')}](${node.getImageUri(node.getAttribute('target'))})`
+      if (node.hasAttribute('link')) {
+        return `[${image}](${node.getAttribute('link')})\n`
+      }
+      return [image]
+    }
+    if (nodeName === 'ulist' || nodeName === 'olist') {
+      const symbol = nodeName === 'ulist' ? '-' : '.'
+      return node.getItems().map((item) => {
+        if (item.hasBlocks()) {
+          // depth?
+          return item.getContent()
+        }
+        return `${symbol} ${item.getText()}`
+      })
+    }
     console.warn(`Unsupported node: ${nodeName}, ignoring.`)
     return ''
   }
 
-  convertAsciiDocToMarkdown (line) {
-    const linkFound = line.match(InlineLinkRegex)
-    if (linkFound) {
-      const link = linkFound[1]
-      const target = linkFound[2]
-      return `[${target}](${link})`
-    }
-    const implicitLinkFound = line.match(InlineImplicitLinkRegex)
-    if (implicitLinkFound) {
-      const link = implicitLinkFound[1]
-      const target = implicitLinkFound[2]
-      return `[${target}](${link})`
-    }
+  convertAsciiDocToMarkdown (line, doc) {
+    line = line.replace(InlineLinkRegex, (match, link, target) => `[${target}](${link})`)
+    line = line.replace(InlineImplicitLinkRegex, (match, link, target) => `[${target}](${link})`)
+    line = line.replace(InlineImageRegexp, (match, link, target) => {
+      const imagesDir = doc.getAttribute('imagesdir')
+      return `![${target}](${path.join(imagesDir, link)})`
+    })
     return line
   }
 }
@@ -128,5 +169,5 @@ module.exports = JupyterConverter
 module.exports.register = function (registry) {
   const AsciidoctorModule = registry.$$base_module
   const ConverterFactory = AsciidoctorModule.$$.ConverterFactory
-  ConverterFactory.register(new JupyterConverter(), ['jupyter'])
+  ConverterFactory.register(JupyterConverter, ['jupyter'])
 }
