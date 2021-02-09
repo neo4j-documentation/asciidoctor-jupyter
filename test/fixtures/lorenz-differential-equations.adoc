@@ -1,0 +1,48 @@
+= The Lorenz Differential Equations
+:jupyter-language-name: python
+:jupyter-language-version: 3.7.8
+:url-ipywidgets: https://ipywidgets.readthedocs.io/en/stable/
+
+Before we start, we import some preliminary libraries.
+We will also import (below) the accompanying `lorenz.py` file,
+which contains the actual solver and plotting routine.
+
+[source,python]
+----
+%matplotlib inline
+from ipywidgets import interactive, fixed
+----
+
+We explore the Lorenz system of differential equations:
+
+[stem]
+++++
+\begin{aligned}
+\dot{x} & = \sigma(y-x) \\
+\dot{y} & = \rho x - y - xz \\
+\dot{z} & = -\beta z + xy
+\end{aligned}
+++++
+
+Let's change (stem:[\sigma], stem:[\beta], stem:[\rho]) with {url-ipywidgets}[ipywidgets] and examine the trajectories.
+
+[source,python]
+----
+from lorenz import solve_lorenz
+w=interactive(solve_lorenz,sigma=(0.0,60.0),rho=(0.0,50.0))
+w
+----
+
+For the default set of parameters, we see the trajectories swirling around two points, called attractors.
+
+The object returned by `interactive` is a `Widget` object and it has attributes that contain the current result and arguments:
+
+[source,python]
+----
+t, x_t = w.result
+----
+
+[source,python]
+----
+w.kwargs
+----

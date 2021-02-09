@@ -14,7 +14,21 @@ class JupyterConverter {
       const blocks = node.getBlocks()
       const cells = []
       for (const block of blocks) {
-        cells.push(...block.convert())
+        const result = block.convert()
+        if (cells.length === 0) {
+          const firstCell = result[0]
+          // attach document title
+          if (firstCell.cell_type === 'markdown') {
+            firstCell.source.unshift(`# ${node.getTitle()}\n\n`)
+          } else {
+            cells.push({
+              cell_type: 'markdown',
+              source: [`# ${node.getTitle()}\n\n`],
+              metadata: {}
+            })
+          }
+        }
+        cells.push(...result)
       }
       const result = {
         cells,
@@ -25,77 +39,80 @@ class JupyterConverter {
           }
         },
         nbformat: 4,
-        nbformat_minor: 5
+        nbformat_minor: 4
       }
       return JSON.stringify(result)
     }
     if (nodeName === 'paragraph') {
-      const lines = node.lines
-      return lines
-        .map(l => node.applySubstitutions(l) + '\n')
+      return [{
+        cell_type: 'markdown',
+        source: node.lines.map(l => node.applySubstitutions(l) + '\n'),
+        metadata: {}
+      }]
     }
     if (nodeName === 'preamble') {
       const blocks = node.getBlocks()
-      const lines = blocks.map((b) => b.convert()).filter(v => v.length !== 0).flat()
-      lines.unshift('# ' + node.getDocument().getTitle() + '\n', '\n')
-      return [{
-        cell_type: 'markdown',
-        metadata: {
-          slideshow: {
-            slide_type: 'slide'
-          }
-        },
-        source: lines
-      }]
+      return blocks.map((b) => b.convert()).filter(v => v.length !== 0).flat()
     }
     if (nodeName === 'section') {
       const blocks = node.getBlocks()
       const cells = []
-      let lines = []
+      let lastCell = {}
       for (const block of blocks) {
-        if (block.getNodeName() === 'listing') {
-          if (lines.length > 0) {
-            if (cells.length === 0) {
-              lines.unshift('## ' + node.getTitle() + '\n', '\n')
+        const result = block.convert()
+        // merge adjacent cells with the same type
+        if (lastCell.cell_type === 'markdown') {
+          if (!result.find(cell => cell.cell_type !== 'markdown')) {
+            lastCell.source.push(...result.flatMap(cell => cell.source))
+          } else {
+            const adjacentMarkdownCells = []
+            const remainingCells = []
+            for (const cell of result) {
+              if (cell.cell_type === 'markdown') {
+                adjacentMarkdownCells.push(cell)
+              } else {
+                remainingCells.push(cell)
+              }
             }
-            cells.push({
-              cell_type: 'markdown',
-              metadata: {
-                slideshow: {
-                  slide_type: 'slide'
-                }
-              },
-              source: lines
-            })
+            lastCell.source.push(...adjacentMarkdownCells.flatMap(cell => cell.source))
+            if (remainingCells.length > 0) {
+              cells.push(...remainingCells)
+              lastCell = cells[cells.length - 1]
+            }
           }
-          lines = []
-          cells.push(block.convert())
         } else {
-          lines.push(...block.convert())
-        }
-      }
-      if (lines.length > 0) {
-        if (cells.length === 0) {
-          lines.unshift('## ' + node.getTitle() + '\n', '\n')
-        }
-        cells.push({
-          cell_type: 'markdown',
-          metadata: {
-            slideshow: {
-              slide_type: 'slide'
+          if (cells.length === 0) {
+            const firstCell = result[0]
+            // attach section title
+            if (firstCell.cell_type === 'markdown') {
+              firstCell.source.unshift(`## ${node.getTitle()}\n\n`)
+            } else {
+              cells.push({
+                cell_type: 'markdown',
+                source: [`## ${node.getTitle()}\n\n`],
+                metadata: {}
+              })
             }
-          },
-          source: lines
-        })
+          }
+          cells.push(...result)
+          lastCell = cells[cells.length - 1]
+        }
       }
       return cells
+    }
+    if (nodeName === 'stem') {
+      return [{
+        cell_type: 'markdown',
+        source: [`\n$$\n${node.lines.join('\n')}\n$$\n`],
+        metadata: {}
+      }]
     }
     if (nodeName === 'listing') {
       const lines = node.lines
       const length = lines.length
       const source = lines
         .map((l, index) => length === index + 1 ? l : l + '\n')
-      return {
+      return [{
         cell_type: 'code',
         metadata: {
           slideshow: {
@@ -104,8 +121,34 @@ class JupyterConverter {
         },
         outputs: [],
         source
-      }
+      }]
     }
+    if (nodeName === 'image') {
+      const image = `![${node.getAttribute('alt')}](${node.getImageUri(node.getAttribute('target'))})`
+      if (node.hasAttribute('link')) {
+        return [`[${image}](${node.getAttribute('link')})\n`]
+      }
+      return [{
+        cell_type: 'markdown',
+        source: ['\n', `${image}\n`, '\n'],
+        metadata: {}
+      }]
+    }
+    if (nodeName === 'ulist' || nodeName === 'olist') {
+      const symbol = nodeName === 'ulist' ? '-' : '1.'
+      return [{
+        cell_type: 'markdown',
+        source: ['\n', ...node.getItems().map((item) => {
+          if (item.hasBlocks()) {
+            // depth?
+            return item.getContent()
+          }
+          return `${symbol} ${item.getText()}\n`
+        }), '\n'],
+        metadata: {}
+      }]
+    }
+    // inline
     if (nodeName === 'inline_anchor') {
       const type = node.getType()
       if (type === 'link') {
@@ -120,9 +163,14 @@ class JupyterConverter {
       if (type === 'emphasis' || type === 'monospaced') {
         // nothing to do
         return node.getText()
-      } else if (type === 'strong') {
+      }
+      if (type === 'strong') {
         return `**${node.getText()}**`
       }
+      if (type === 'asciimath') {
+        return `\\\\(${node.getText()}\\\\)`
+      }
+      console.log(type)
       return node.getText()
     }
     if (nodeName === 'inline_image') {
@@ -132,23 +180,7 @@ class JupyterConverter {
       }
       return image
     }
-    if (nodeName === 'image') {
-      const image = `![${node.getAttribute('alt')}](${node.getImageUri(node.getAttribute('target'))})`
-      if (node.hasAttribute('link')) {
-        return [`[${image}](${node.getAttribute('link')})\n`]
-      }
-      return ['\n', `${image}\n`, '\n']
-    }
-    if (nodeName === 'ulist' || nodeName === 'olist') {
-      const symbol = nodeName === 'ulist' ? '-' : '1.'
-      return ['\n', ...node.getItems().map((item) => {
-        if (item.hasBlocks()) {
-          // depth?
-          return item.getContent()
-        }
-        return `${symbol} ${item.getText()}\n`
-      }), '\n']
-    }
+
     console.warn(`Unsupported node: ${nodeName}, ignoring.`)
     return ''
   }
