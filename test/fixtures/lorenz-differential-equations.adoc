@@ -15,7 +15,7 @@ from ipywidgets import interactive, fixed
 
 We explore the Lorenz system of differential equations:
 
-[stem]
+[latexmath]
 ++++
 \begin{aligned}
 \dot{x} & = \sigma(y-x) \\
