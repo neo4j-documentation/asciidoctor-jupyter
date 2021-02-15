@@ -228,10 +228,10 @@ class JupyterConverter {
     if (nodeName === 'admonition') {
       const cells = []
       cells.push({
-          cell_type: 'markdown',
-          source: [`*${node.getAttribute('textlabel')}:* `],
-          metadata: {}
-        }
+        cell_type: 'markdown',
+        source: [`*${node.getAttribute('textlabel')}:* `],
+        metadata: {}
+      }
       )
       let lastCell = {}
       if (node.hasBlocks()) {
