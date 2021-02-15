@@ -18,14 +18,16 @@ class JupyterConverter {
         if (cells.length === 0) {
           const firstCell = result[0]
           // attach document title
-          if (firstCell.cell_type === 'markdown') {
-            firstCell.source.unshift(`# ${node.getTitle()}\n\n`)
-          } else {
-            cells.push({
-              cell_type: 'markdown',
-              source: [`# ${node.getTitle()}\n\n`],
-              metadata: {}
-            })
+          if (node.hasHeader() && node.getDocumentTitle()) {
+            if (firstCell.cell_type === 'markdown') {
+              firstCell.source.unshift(`# ${node.getDocumentTitle()}\n\n`)
+            } else {
+              cells.push({
+                cell_type: 'markdown',
+                source: [`# ${node.getDocumentTitle()}\n\n`],
+                metadata: {}
+              })
+            }
           }
         }
         cells.push(...result)
@@ -67,14 +69,16 @@ class JupyterConverter {
           if (cells.length === 0) {
             const firstCell = result[0]
             // attach section title
-            if (firstCell.cell_type === 'markdown') {
-              firstCell.source.unshift(`## ${node.getTitle()}\n\n`)
-            } else {
-              cells.push({
-                cell_type: 'markdown',
-                source: [`## ${node.getTitle()}\n\n`],
-                metadata: {}
-              })
+            if (node.getTitle()) {
+              if (firstCell.cell_type === 'markdown') {
+                firstCell.source.unshift(`## ${node.getTitle()}\n\n`)
+              } else {
+                cells.push({
+                  cell_type: 'markdown',
+                  source: [`## ${node.getTitle()}\n\n`],
+                  metadata: {}
+                })
+              }
             }
           }
           cells.push(...result)
@@ -119,7 +123,6 @@ class JupyterConverter {
     }
     if (nodeName === 'ulist' || nodeName === 'olist') {
       const symbol = nodeName === 'ulist' ? '-' : '1.'
-      const lines = []
       let lastCell = {}
       const cells = []
       for (const item of node.getItems()) {
@@ -144,6 +147,54 @@ class JupyterConverter {
       }
       return cells
     }
+    if (nodeName === 'table') {
+      // boom!
+      const lines = ['\n']
+      const headRows = node.getHeadRows()
+      const bodyRows = node.getBodyRows().concat(node.getFootRows())
+      if (headRows.length === 0 && bodyRows.length === 0) {
+        // empty table!
+        return ''
+      }
+      let headRow
+      if (headRows.length === 0) {
+        headRow = bodyRows.shift()
+      } else {
+        headRow = headRows.shift()
+      }
+      let headLine = '| '
+      for (const headCell of headRow) {
+        headLine += headCell.getText() + ' | '
+      }
+      lines.push(headLine.trim() + '\n')
+      lines.push('| ' + headRow.map(c => '-'.repeat(c.getText().length)).join(' | ') + ' |\n')
+      if (headRows && headRows.length > 0) {
+        for (const headRow of headRows) {
+          let line = '| '
+          for (const headCell of headRow) {
+            line += headCell.getText() + ' | '
+          }
+          line = line.trim() + '\n'
+          lines.push(line)
+        }
+      }
+      if (bodyRows && bodyRows.length > 0) {
+        for (const bodyRow of bodyRows) {
+          let line = '| '
+          for (const cell of bodyRow) {
+            line += cell.getText() + ' | '
+          }
+          line = line.trim() + '\n'
+          lines.push(line)
+        }
+      }
+      lines.push('\n')
+      return [{
+        cell_type: 'markdown',
+        source: lines,
+        metadata: {}
+      }]
+    }
     // inline
     if (nodeName === 'inline_anchor') {
       const type = node.getType()
@@ -166,7 +217,10 @@ class JupyterConverter {
       if (type === 'asciimath') {
         return `\\\\(${node.getText()}\\\\)`
       }
-      console.log(type)
+      if (type === 'unquoted') {
+        return node.getText()
+      }
+      console.info(`Unsupported inline type: ${type}, using raw text.`)
       return node.getText()
     }
     if (nodeName === 'inline_image') {
@@ -189,22 +243,24 @@ class JupyterConverter {
    * @returns lastCell
    */
   mergeAdjacentMarkdownCells (result, lastCell, cells) {
-    if (!result.find(cell => cell.cell_type !== 'markdown')) {
-      lastCell.source.push(...result.flatMap(cell => cell.source))
-    } else {
-      const adjacentMarkdownCells = []
-      const remainingCells = []
-      for (const cell of result) {
-        if (cell.cell_type === 'markdown') {
-          adjacentMarkdownCells.push(cell)
-        } else {
-          remainingCells.push(cell)
+    if (result) {
+      if (!result.find(cell => cell.cell_type !== 'markdown')) {
+        lastCell.source.push(...result.flatMap(cell => cell.source))
+      } else {
+        const adjacentMarkdownCells = []
+        const remainingCells = []
+        for (const cell of result) {
+          if (cell.cell_type === 'markdown') {
+            adjacentMarkdownCells.push(cell)
+          } else {
+            remainingCells.push(cell)
+          }
         }
-      }
-      lastCell.source.push(...adjacentMarkdownCells.flatMap(cell => cell.source))
-      if (remainingCells.length > 0) {
-        cells.push(...remainingCells)
-        lastCell = cells[cells.length - 1]
+        lastCell.source.push(...adjacentMarkdownCells.flatMap(cell => cell.source))
+        if (remainingCells.length > 0) {
+          cells.push(...remainingCells)
+          lastCell = cells[cells.length - 1]
+        }
       }
     }
     return lastCell

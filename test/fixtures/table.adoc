@@ -1,0 +1,23 @@
+== Exercise 5.2: Determine how large the datasets are that you will be loading. (Instructions)
+
+The datasets containing the normalized data are at these locations:
+
+[cols='1,4',opts=header]
+|===
+|Dataset
+|URL
+
+|Movies
+|https://data.neo4j.com/advanced-cypher/movies1.csv
+
+|People
+|https://data.neo4j.com/advanced-cypher/people.csv
+
+|Roles
+|https://data.neo4j.com/advanced-cypher/roles.csv
+
+|Directors
+|https://data.neo4j.com/advanced-cypher/directors.csv
+|===
+
+*Write Cypher code to return the number of lines in each of these CSV files.*

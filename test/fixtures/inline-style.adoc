@@ -1,0 +1,1 @@
+For all query tuning measurements, you must [underline]#always# run the query twice.
