@@ -46,9 +46,10 @@ class JupyterConverter {
       return JSON.stringify(result)
     }
     if (nodeName === 'paragraph') {
+      const source = node.lines.map(l => node.applySubstitutions(l) + '\n')
       return [{
         cell_type: 'markdown',
-        source: node.lines.map(l => node.applySubstitutions(l) + '\n'),
+        source,
         metadata: {}
       }]
     }
@@ -145,10 +146,16 @@ class JupyterConverter {
           }
         }
       }
+      // make room around a list
+      if (cells.length > 0) {
+        cells[0].source.unshift('\n')
+      }
+      if (cells.length > 1) {
+        cells[cells.length - 1].source.push('\n')
+      }
       return cells
     }
     if (nodeName === 'table') {
-      // boom!
       const lines = ['\n']
       const headRows = node.getHeadRows()
       const bodyRows = node.getBodyRows().concat(node.getFootRows())
@@ -194,6 +201,55 @@ class JupyterConverter {
         source: lines,
         metadata: {}
       }]
+    }
+    if (nodeName === 'quote') {
+      const cells = []
+      let lastCell = {}
+      const blocks = node.getBlocks()
+      for (const block of blocks) {
+        const result = block.convert()
+        // merge adjacent cells with the same type
+        if (lastCell.cell_type === 'markdown') {
+          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells)
+        } else {
+          cells.push(...result)
+          lastCell = cells[cells.length - 1]
+        }
+      }
+      return cells.map(cell => {
+        if (cell.cell_type === 'markdown') {
+          cell.source = cell.source.map(l => `> ${l}`)
+          cell.source.unshift('\n')
+          cell.source.push('\n')
+        }
+        return cell
+      })
+    }
+    if (nodeName === 'admonition') {
+      const cells = []
+      cells.push({
+          cell_type: 'markdown',
+          source: [`*${node.getAttribute('textlabel')}:* `],
+          metadata: {}
+        }
+      )
+      let lastCell = {}
+      if (node.hasBlocks()) {
+        const blocks = node.getBlocks()
+        for (const block of blocks) {
+          const result = block.convert()
+          // merge adjacent cells with the same type
+          if (lastCell.cell_type === 'markdown') {
+            lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells)
+          } else {
+            cells.push(...result)
+            lastCell = cells[cells.length - 1]
+          }
+        }
+      } else {
+        cells[0].source[0] += node.getContent() + '\n'
+      }
+      return cells
     }
     // inline
     if (nodeName === 'inline_anchor') {

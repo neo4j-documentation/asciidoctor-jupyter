@@ -123,4 +123,75 @@ The datasets containing the normalized data are at these locations:
 **Write Cypher code to return the number of lines in each of these CSV files.**
 `)
   })
+  it('should convert an exercise guide with a quote to ipynb', async () => {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'quote.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.metadata.language_info.name).is.equal('python')
+    expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
+    expect(ipynb.cells.length).is.equal(1)
+    expect(ipynb.cells[0].source.join('')).is.equal(`## Category Hierarchy
+
+This structure between categories is already hiding in the data, we just need to extract it.
+The Overlap Similarity algorithm is the perfect choice for this type of problem.
+
+> The overlap coefficient, or Szymkiewicz–Simpson coefficient, is a similarity measure that measures the overlap between two sets.
+> It is defined as the size of the intersection divided by the smaller of the size of the two sets.
+
+It is computed using the following formula:
+
+![overlap](overlap.svg)
+
+If set X is a subset of Y or vice versa then the overlap coefficient is equal to one.
+`)
+  })
+  it('should convert an exercise guide with admonitions to ipynb', async () => {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'admonitions.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.metadata.language_info.name).is.equal('python')
+    expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
+    expect(ipynb.cells.length).is.equal(6)
+    expect(ipynb.cells[0].source.join('')).is.equal('*Note:* An admonition draws attention to auxiliary information.\n')
+    expect(ipynb.cells[1].source.join('')).is.equal('Here are the other built-in admonition types:\n')
+    expect(ipynb.cells[2].source.join('')).is.equal('*Tip:* Pro tip&#8230;&#8203;\n')
+    expect(ipynb.cells[3].source.join('')).is.equal('*Important:* Don&#8217;t forget&#8230;&#8203;\n')
+    expect(ipynb.cells[4].source.join('')).is.equal('*Warning:* Watch out for&#8230;&#8203;\n')
+    expect(ipynb.cells[5].source.join('')).is.equal('*Caution:* Ensure that&#8230;&#8203;\n')
+  })
+  it('should convert an exercise guide with an admonition block to ipynb', async () => {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'admonition-block.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.metadata.language_info.name).is.equal('python')
+    expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
+    expect(ipynb.cells.length).is.equal(2)
+    expect(ipynb.cells[0].source.join('')).is.equal('*Note:* ')
+    expect(ipynb.cells[1].source.join('')).is.equal(`An admonition block may contain complex content.
+
+- one
+- two
+- three
+
+Another paragraph.
+`)
+  })
 })

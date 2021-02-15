@@ -1,0 +1,16 @@
+== Category Hierarchy
+
+This structure between categories is already hiding in the data, we just need to extract it.
+The Overlap Similarity algorithm is the perfect choice for this type of problem.
+
+[quote]
+____
+The overlap coefficient, or Szymkiewicz–Simpson coefficient, is a similarity measure that measures the overlap between two sets.
+It is defined as the size of the intersection divided by the smaller of the size of the two sets.
+____
+
+It is computed using the following formula:
+
+image::overlap.svg[]
+
+If set X is a subset of Y or vice versa then the overlap coefficient is equal to one.
