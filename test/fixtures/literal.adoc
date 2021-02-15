@@ -1,0 +1,8 @@
+....
+{
+  name: <name of actor>,
+  born: <year actor born>,
+  roles: [roles that this actor has played in all of his/her movies]
+  movies: [titles of the movies this actor has acted in]
+}
+....

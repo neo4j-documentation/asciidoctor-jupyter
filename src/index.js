@@ -95,7 +95,7 @@ class JupyterConverter {
         metadata: {}
       }]
     }
-    if (nodeName === 'listing') {
+    if (nodeName === 'listing' || nodeName === 'literal') {
       const lines = node.lines
       const length = lines.length
       const source = lines
