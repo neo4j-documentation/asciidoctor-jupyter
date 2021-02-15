@@ -97,4 +97,4 @@ And here's the result:
 
 ## Notebook file format
 
-This converter generates [Jupyter notebooks] using [Notebook file format](https://nbformat.readthedocs.io/en/latest/format_description.html) version 4.5.
+This converter generates [Jupyter notebooks] using [Notebook file format](https://nbformat.readthedocs.io/en/latest/format_description.html) version 4.4.
