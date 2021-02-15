@@ -1,0 +1,29 @@
+= Exercise 14
+
+== Exercise 14.6: Perform a query that uses the full-text schema index (Solution)
+
+. *Write and execute a query to find all movies with taglines that contain the strings "real" or "world".*
++
+[source,Cypher]
+----
+CALL db.index.fulltext.queryNodes('MovieTaglineFTIndex', 'real OR world') YIELD node
+RETURN node.title, node.tagline
+----
++
+The result returned should be:
++
+[.thumb]
+image::UseFTIndex.png[UseFTIndex,width=600]
++
+. *Write and execute a query to find all movies with taglines that contain the strings "real" and "world".*
++
+[source,Cypher]
+----
+CALL db.index.fulltext.queryNodes('MovieTaglineFTIndex', 'real AND world') YIELD node
+RETURN node.title, node.tagline
+----
++
+The result returned should be:
++
+[.thumb]
+image::UseFTIndex2.png[UseFTIndex2,width=800]
