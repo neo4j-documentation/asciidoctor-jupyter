@@ -252,6 +252,9 @@ class JupyterConverter {
       return cells
     }
     // inline
+    if (nodeName === 'inline_break') {
+      return '\n'
+    }
     if (nodeName === 'inline_anchor') {
       const type = node.getType()
       if (type === 'link') {
