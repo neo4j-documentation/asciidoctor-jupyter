@@ -207,12 +207,16 @@ Another paragraph.
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
     expect(ipynb.cells.length).is.equal(1)
-    expect(ipynb.cells[0].cell_type).is.equal('code')
-    expect(ipynb.cells[0].source.join('')).is.equal(`{
+    expect(ipynb.cells[0].cell_type).is.equal('markdown')
+    expect(ipynb.cells[0].source.join('')).is.equal(`
+\`\`\`
+{
   name: <name of actor>,
   born: <year actor born>,
   roles: [roles that this actor has played in all of his/her movies]
   movies: [titles of the movies this actor has acted in]
-}`)
+}
+\`\`\`
+`)
   })
 })

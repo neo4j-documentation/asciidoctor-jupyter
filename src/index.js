@@ -95,7 +95,18 @@ class JupyterConverter {
         metadata: {}
       }]
     }
-    if (nodeName === 'listing' || nodeName === 'literal') {
+    if (nodeName === 'literal') {
+      const lines = node.lines
+      const length = lines.length
+      const source = lines
+        .map((l, index) => length === index + 1 ? l : l + '\n')
+      return [{
+        cell_type: 'markdown',
+        source: ['\n```\n', ...source, '\n```\n'],
+        metadata: {}
+      }]
+    }
+    if (nodeName === 'listing') {
       const lines = node.lines
       const length = lines.length
       const source = lines
