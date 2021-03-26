@@ -113,6 +113,7 @@ class JupyterConverter {
         .map((l, index) => length === index + 1 ? l : l + '\n')
       return [{
         cell_type: 'code',
+        execution_count: 0,
         metadata: {
           slideshow: {
             slide_type: 'fragment'
