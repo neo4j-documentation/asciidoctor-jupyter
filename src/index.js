@@ -172,8 +172,8 @@ class JupyterConverter {
     }
     if (nodeName === 'table') {
       const lines = ['\n']
-      const headRows = node.getHeadRows()
-      const bodyRows = node.getBodyRows().concat(node.getFootRows())
+      const headRows = node.rows.head // getHeadRows()
+      const bodyRows = node.rows.body.concat(node.rows.foot) // getBodyRows() | getFootRows()
       if (headRows.length === 0 && bodyRows.length === 0) {
         // empty table!
         return ''
@@ -186,15 +186,15 @@ class JupyterConverter {
       }
       let headLine = '| '
       for (const headCell of headRow) {
-        headLine += headCell.getText() + ' | '
+        headLine += headCell.$text() + ' | ' // getText()
       }
       lines.push(headLine.trim() + '\n')
-      lines.push('| ' + headRow.map(c => '-'.repeat(c.getText().length)).join(' | ') + ' |\n')
+      lines.push('| ' + headRow.map(c => '-'.repeat(c.$text().length)).join(' | ') + ' |\n') // getText()
       if (headRows && headRows.length > 0) {
         for (const headRow of headRows) {
           let line = '| '
           for (const headCell of headRow) {
-            line += headCell.getText() + ' | '
+            line += headCell.$text() + ' | ' // getText()
           }
           line = line.trim() + '\n'
           lines.push(line)
@@ -204,7 +204,7 @@ class JupyterConverter {
         for (const bodyRow of bodyRows) {
           let line = '| '
           for (const cell of bodyRow) {
-            line += cell.getText() + ' | '
+            line += cell.$text() + ' | ' // getText()
           }
           line = line.trim() + '\n'
           lines.push(line)
