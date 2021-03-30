@@ -323,11 +323,13 @@ class JupyterConverter {
       } else {
         const adjacentMarkdownCells = []
         const remainingCells = []
+        let adjacentCells = true
         for (const cell of result) {
-          if (cell.cell_type === 'markdown') {
+          if (adjacentCells && cell.cell_type === 'markdown') {
             adjacentMarkdownCells.push(cell)
           } else {
             remainingCells.push(cell)
+            adjacentCells = false
           }
         }
         lastCell.source.push(...adjacentMarkdownCells.flatMap(cell => cell.source))

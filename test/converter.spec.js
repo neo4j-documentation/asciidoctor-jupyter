@@ -229,4 +229,25 @@ Another paragraph.
     })
     expect(result).is.not.empty()
   })
+  it('should retain blocks order', async() => {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'retain-order.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells.length).is.equal(9)
+    expect(ipynb.cells[0].cell_type).is.equal('markdown')
+    expect(ipynb.cells[1].cell_type).is.equal('code')
+    expect(ipynb.cells[2].cell_type).is.equal('markdown')
+    expect(ipynb.cells[3].cell_type).is.equal('code')
+    expect(ipynb.cells[4].cell_type).is.equal('markdown')
+    expect(ipynb.cells[5].cell_type).is.equal('code')
+    expect(ipynb.cells[6].cell_type).is.equal('markdown')
+    expect(ipynb.cells[7].cell_type).is.equal('code')
+    expect(ipynb.cells[8].cell_type).is.equal('markdown')
+  })
 })
