@@ -53,7 +53,7 @@ class JupyterConverter {
         metadata: {}
       }]
     }
-    if (nodeName === 'pass') {
+    if (nodeName === 'pass' || nodeName === 'thematic_break') {
       return [] // ignore
     }
     if (nodeName === 'preamble') {
