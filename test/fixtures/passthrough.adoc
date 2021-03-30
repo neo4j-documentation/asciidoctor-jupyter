@@ -1,0 +1,11 @@
+= Title
+
+== Section
+
+++++
+<a href="https://www.mozilla.org/firefox">
+++++
+image::https://upload.wikimedia.org/wikipedia/commons/5/59/Firefox_Project_Logo%2C_2019.svg[width=100]
+++++
+</a>
+++++

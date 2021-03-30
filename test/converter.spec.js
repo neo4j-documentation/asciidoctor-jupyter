@@ -219,4 +219,14 @@ Another paragraph.
 \`\`\`
 `)
   })
+  it('should ignore passthrough blocks', async ()=> {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'passthrough.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+  })
 })

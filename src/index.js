@@ -53,6 +53,9 @@ class JupyterConverter {
         metadata: {}
       }]
     }
+    if (nodeName === 'pass') {
+      return [] // ignore
+    }
     if (nodeName === 'preamble') {
       const blocks = node.getBlocks()
       return blocks.map((b) => b.convert()).filter(v => v.length !== 0).flat()
@@ -71,7 +74,7 @@ class JupyterConverter {
             const firstCell = result[0]
             // attach section title
             if (node.getTitle()) {
-              if (firstCell.cell_type === 'markdown') {
+              if (firstCell && firstCell.cell_type === 'markdown') {
                 firstCell.source.unshift(`## ${node.getTitle()}\n\n`)
               } else {
                 cells.push({
