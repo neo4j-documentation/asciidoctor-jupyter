@@ -319,7 +319,7 @@ class JupyterConverter {
   mergeAdjacentMarkdownCells (result, lastCell, cells) {
     if (result) {
       if (!result.find(cell => cell.cell_type !== 'markdown')) {
-        lastCell.source.push(...result.flatMap(cell => cell.source))
+        lastCell.source.push(...result.reduce((acc, cell) => acc.concat(cell.source), [])) // flatMap Node > 11
       } else {
         const adjacentMarkdownCells = []
         const remainingCells = []
@@ -332,7 +332,7 @@ class JupyterConverter {
             adjacentCells = false
           }
         }
-        lastCell.source.push(...adjacentMarkdownCells.flatMap(cell => cell.source))
+        lastCell.source.push(...adjacentMarkdownCells.reduce((acc, cell) => acc.concat(cell.source), [])) // flatMap Node > 11
         if (remainingCells.length > 0) {
           cells.push(...remainingCells)
           lastCell = cells[cells.length - 1]
