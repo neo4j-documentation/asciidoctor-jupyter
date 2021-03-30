@@ -229,6 +229,16 @@ Another paragraph.
     })
     expect(result).is.not.empty()
   })
+  it('should ignore thematic break blocks', async ()=> {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'thematic-break.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+  })
   it('should retain blocks order', async() => {
     asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'retain-order.adoc')

@@ -19,7 +19,7 @@ class JupyterConverter {
           const firstCell = result[0]
           // attach document title
           if (node.hasHeader() && node.getDocumentTitle()) {
-            if (firstCell.cell_type === 'markdown') {
+            if (firstCell && firstCell.cell_type === 'markdown') {
               firstCell.source.unshift(`# ${node.getDocumentTitle()}\n\n`)
             } else {
               cells.push({
