@@ -260,4 +260,28 @@ Another paragraph.
     expect(ipynb.cells[7].cell_type).is.equal('code')
     expect(ipynb.cells[8].cell_type).is.equal('markdown')
   })
+  it('should convert monospaced', async () => {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'monospaced.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells[0].source[1]).is.equal('Install `icypher` then connect to your database!\n')
+  })
+  it('should convert emphasis', async () => {
+    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+    const inputFile = path.join(__dirname, 'fixtures', 'emphasis.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells[0].source[0]).is.equal('Happy werewolves are *really* slobbery.\n')
+  })
 })

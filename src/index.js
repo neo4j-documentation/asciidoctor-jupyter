@@ -281,9 +281,11 @@ class JupyterConverter {
     }
     if (nodeName === 'inline_quoted') {
       const type = node.getType()
-      if (type === 'emphasis' || type === 'monospaced') {
-        // nothing to do
-        return node.getText()
+      if (type === 'emphasis') {
+        return `*${node.getText()}*`
+      }
+      if (type === 'monospaced') {
+        return `\`${node.getText()}\``
       }
       if (type === 'strong') {
         return `**${node.getText()}**`
