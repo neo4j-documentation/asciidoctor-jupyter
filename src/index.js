@@ -58,7 +58,7 @@ class JupyterConverter {
     }
     if (nodeName === 'preamble') {
       const blocks = node.getBlocks()
-      return blocks.map((b) => b.convert()).filter(v => v.length !== 0).reduce((acc, val) => acc.concat(val), []); // flat Node > 10
+      return blocks.map((b) => b.convert()).filter(v => v.length !== 0).reduce((acc, val) => acc.concat(val), []) // flat Node > 10
     }
     if (nodeName === 'section') {
       const blocks = node.getBlocks()
