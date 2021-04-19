@@ -6,6 +6,9 @@
     "node": ">=12"
   },
   "main": "src/index.js",
+  "files": [
+    "src/*"
+  ],
   "scripts": {
     "test": "mocha test/**.spec.js",
     "lint": "standard src/**.js test/**.js"
