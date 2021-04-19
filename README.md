@@ -3,6 +3,7 @@
 A Jupyter converter for Asciidoctor.js. Write your Notebook in AsciiDoc!
 
 ![Build JavaScript](https://github.com/neo4j-documentation/asciidoctor-jupyter/workflows/Build%20JavaScript/badge.svg)
+[![npm version](http://img.shields.io/npm/v/asciidoctor-jupyter.svg)](https://www.npmjs.com/package/asciidoctor-jupyter)
 
 ## Install
 
