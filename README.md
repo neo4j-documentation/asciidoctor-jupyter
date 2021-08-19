@@ -20,7 +20,7 @@ Verify that the `asciidoctor` command is now available on your `PATH` by running
 
 To convert an AsciiDoc file to a Jupyter Notebook, open a terminal and type:
 
-    $ asciidoctor -r asciidoctor-jupyter notebook.adoc
+    $ asciidoctor -r asciidoctor-jupyter -b jupyter notebook.adoc
 
 The above command will generate a file named `notebook.ipynb`.
 
