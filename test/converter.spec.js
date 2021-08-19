@@ -187,7 +187,6 @@ Another paragraph.
 `)
   })
   it('should convert an exercise guide with a literal block to ipynb', async () => {
-
     const inputFile = path.join(__dirname, 'fixtures', 'literal.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',

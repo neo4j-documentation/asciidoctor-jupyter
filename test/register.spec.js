@@ -1,5 +1,4 @@
 /* global describe it */
-const util = require('util')
 const fs = require('fs').promises
 const path = require('path')
 const chai = require('chai')
@@ -8,7 +7,7 @@ const dirtyChai = require('dirty-chai')
 
 chai.use(dirtyChai)
 
-const { register  : registerJupyterConverter } = require('../src/index.js')
+const { register: registerJupyterConverter } = require('../src/index.js')
 const asciidoctor = require('@asciidoctor/core')()
 
 describe('Jupyter converter', () => {
