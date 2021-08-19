@@ -348,6 +348,13 @@ class JupyterConverter {
 module.exports = JupyterConverter
 module.exports.register = function (registry) {
   const AsciidoctorModule = registry.$$base_module
-  const ConverterFactory = AsciidoctorModule.$$.ConverterFactory
+  let ConverterFactory
+  if (typeof AsciidoctorModule.ConverterFactory !== 'undefined') {
+    // Asciidoctor.js >= 2
+    ConverterFactory = AsciidoctorModule.ConverterFactory
+  } else {
+    // Asciidoctor.js < 2
+    ConverterFactory = AsciidoctorModule.$$.ConverterFactory
+  }
   ConverterFactory.register(JupyterConverter, ['jupyter'])
 }

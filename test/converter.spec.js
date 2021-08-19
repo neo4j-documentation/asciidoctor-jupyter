@@ -10,6 +10,7 @@ chai.use(dirtyChai)
 
 const JupyterConverter = require('../src/index.js')
 const asciidoctor = require('@asciidoctor/core')()
+asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
 
 const debug = async (result, path) => {
   if (process.env.DEBUG) {
@@ -23,7 +24,6 @@ const debug = async (result, path) => {
 
 describe('Jupyter converter', () => {
   it('should convert to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const content = await fs.readFile(path.join(__dirname, 'fixtures', 'hello-world.adoc'))
     const result = asciidoctor.convert(content, { backend: 'jupyter' })
     expect(result).is.not.empty()
@@ -38,7 +38,6 @@ describe('Jupyter converter', () => {
 graph = Graph()`)
   })
   it('should convert an exercise guide to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'intro-neo4j-guides-01.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -52,7 +51,6 @@ graph = Graph()`)
     expect(ipynb.cells.length).is.equal(20)
   })
   it('should convert stem blocks to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'lorenz-differential-equations.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -67,7 +65,6 @@ graph = Graph()`)
     await debug(result, 'lorenz-differential-equations.ipynb')
   })
   it('should convert an exercise guide with a complex list to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'list-continuation.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -82,7 +79,6 @@ graph = Graph()`)
     await debug(result, 'list-continuation.ipynb')
   })
   it('should convert an exercise guide with a inline style list to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'inline-style.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -97,7 +93,6 @@ graph = Graph()`)
     expect(ipynb.cells[0].source[0]).is.equal('For all query tuning measurements, you must always run the query twice.\n')
   })
   it('should convert an exercise guide with a table to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'table.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -124,7 +119,6 @@ The datasets containing the normalized data are at these locations:
 `)
   })
   it('should convert an exercise guide with a quote to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'quote.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -152,7 +146,6 @@ If set X is a subset of Y or vice versa then the overlap coefficient is equal to
 `)
   })
   it('should convert an exercise guide with admonitions to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'admonitions.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -172,7 +165,6 @@ If set X is a subset of Y or vice versa then the overlap coefficient is equal to
     expect(ipynb.cells[5].source.join('')).is.equal('*Caution:* Ensure that&#8230;&#8203;\n')
   })
   it('should convert an exercise guide with an admonition block to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'admonition-block.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -195,7 +187,7 @@ Another paragraph.
 `)
   })
   it('should convert an exercise guide with a literal block to ipynb', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
+
     const inputFile = path.join(__dirname, 'fixtures', 'literal.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -220,7 +212,6 @@ Another paragraph.
 `)
   })
   it('should ignore passthrough blocks', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'passthrough.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -230,7 +221,6 @@ Another paragraph.
     expect(result).is.not.empty()
   })
   it('should ignore thematic break blocks', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'thematic-break.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -240,7 +230,6 @@ Another paragraph.
     expect(result).is.not.empty()
   })
   it('should retain blocks order', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'retain-order.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -261,7 +250,6 @@ Another paragraph.
     expect(ipynb.cells[8].cell_type).is.equal('markdown')
   })
   it('should convert monospaced', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'monospaced.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
@@ -273,7 +261,6 @@ Another paragraph.
     expect(ipynb.cells[0].source[1]).is.equal('Install `icypher` then connect to your database!\n')
   })
   it('should convert emphasis', async () => {
-    asciidoctor.ConverterFactory.register(JupyterConverter, ['jupyter'])
     const inputFile = path.join(__dirname, 'fixtures', 'emphasis.adoc')
     const result = asciidoctor.convertFile(inputFile, {
       safe: 'safe',
