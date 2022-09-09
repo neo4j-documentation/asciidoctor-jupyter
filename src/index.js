@@ -349,7 +349,14 @@ let logger = console
 
 module.exports = JupyterConverter
 module.exports.register = function (registry) {
-  const AsciidoctorModule = registry.$$base_module
+  let AsciidoctorModule
+  if (registry.$$meta && registry.$$meta.$$is_class) {
+    // registry is a class
+    AsciidoctorModule = registry.$$base_module
+  } else {
+    // instance
+    AsciidoctorModule = registry.$$class.$$base_module.$$base_module
+  }
   let ConverterFactory
   if (typeof AsciidoctorModule.ConverterFactory !== 'undefined') {
     // Asciidoctor.js >= 2
