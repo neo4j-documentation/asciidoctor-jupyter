@@ -348,7 +348,7 @@ class JupyterConverter {
 let logger = console
 
 module.exports = JupyterConverter
-module.exports.register = function (registry) {
+module.exports.register = function (registry, context) {
   let AsciidoctorModule
   if (registry.$$meta && registry.$$meta.$$is_class) {
     // registry is a class
@@ -357,11 +357,15 @@ module.exports.register = function (registry) {
     // instance
     AsciidoctorModule = registry.$$class.$$base_module.$$base_module
   }
+  if (context && context.logger) {
+    logger = context.logger
+  } else if (AsciidoctorModule.LoggerManager) {
+    logger = AsciidoctorModule.LoggerManager.getLogger()
+  }
   let ConverterFactory
   if (typeof AsciidoctorModule.ConverterFactory !== 'undefined') {
     // Asciidoctor.js >= 2
     ConverterFactory = AsciidoctorModule.ConverterFactory
-    logger = AsciidoctorModule.LoggerManager.getLogger()
   } else {
     // Asciidoctor.js < 2
     ConverterFactory = AsciidoctorModule.$$.ConverterFactory

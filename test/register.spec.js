@@ -63,7 +63,6 @@ graph = Graph()`)
     try {
       const memoryLogger = asciidoctor.MemoryLogger.create()
       loggerManager.setLogger(memoryLogger)
-      // this function is called by Asciidoctor.js CLI
       const registry = asciidoctor.Extensions.create()
       registerJupyterConverter(registry)
       const content = await fs.readFile(path.join(__dirname, 'fixtures', 'unsupported-syntax.adoc'))
@@ -82,5 +81,21 @@ graph = Graph()`)
     } finally {
       loggerManager.setLogger(initialLogger)
     }
+  })
+  it('should send logs through a logger', async () => {
+    const registry = asciidoctor.Extensions.create()
+    const messages = []
+    registerJupyterConverter(registry, {
+      logger: {
+        info: (msg) => messages.push(msg)
+      }
+    })
+    const content = await fs.readFile(path.join(__dirname, 'fixtures', 'unsupported-syntax.adoc'))
+    const result = asciidoctor.convert(content, { backend: 'jupyter', extension_registry: registry })
+    expect(result).is.not.empty()
+    expect(messages).to.deep.equals([
+      'Unsupported inline type: subscript, using raw text.',
+      'Unsupported inline type: superscript, using raw text.'
+    ])
   })
 })
