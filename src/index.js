@@ -276,7 +276,7 @@ class JupyterConverter {
         return `[${node.getText()}](${node.getTarget()})`
       }
       // unsupported link type!
-      console.warn(`Unsupported inline_anchor type: ${type}, ignoring.`)
+      logger.warn(`Unsupported inline_anchor type: ${type}, ignoring.`)
       return ''
     }
     if (nodeName === 'inline_quoted') {
@@ -296,7 +296,7 @@ class JupyterConverter {
       if (type === 'unquoted') {
         return node.getText()
       }
-      console.info(`Unsupported inline type: ${type}, using raw text.`)
+      logger.info(`Unsupported inline type: ${type}, using raw text.`)
       return node.getText()
     }
     if (nodeName === 'inline_image') {
@@ -307,7 +307,7 @@ class JupyterConverter {
       return image
     }
 
-    console.warn(`Unsupported node: ${nodeName}, ignoring.`)
+    logger.warn(`Unsupported node: ${nodeName}, ignoring.`)
     return ''
   }
 
@@ -345,6 +345,8 @@ class JupyterConverter {
   }
 }
 
+let logger = console
+
 module.exports = JupyterConverter
 module.exports.register = function (registry) {
   const AsciidoctorModule = registry.$$base_module
@@ -352,6 +354,7 @@ module.exports.register = function (registry) {
   if (typeof AsciidoctorModule.ConverterFactory !== 'undefined') {
     // Asciidoctor.js >= 2
     ConverterFactory = AsciidoctorModule.ConverterFactory
+    logger = AsciidoctorModule.LoggerManager.getLogger()
   } else {
     // Asciidoctor.js < 2
     ConverterFactory = AsciidoctorModule.$$.ConverterFactory

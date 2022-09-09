@@ -27,4 +27,24 @@ describe('Jupyter converter', () => {
 
 graph = Graph()`)
   })
+  it('should send logs through Asciidoctor logger', async () => {
+    const loggerManager = asciidoctor.LoggerManager
+    const memoryLogger = asciidoctor.MemoryLogger.create()
+    loggerManager.setLogger(memoryLogger)
+    // this function is called by Asciidoctor.js CLI
+    registerJupyterConverter(asciidoctor.Extensions)
+    const content = await fs.readFile(path.join(__dirname, 'fixtures', 'unsupported-syntax.adoc'))
+    const result = asciidoctor.convert(content, { backend: 'jupyter' })
+    expect(result).is.not.empty()
+    expect(memoryLogger.getMessages().map(msg => ({ severity: msg.getSeverity(), message: msg.getText() }))).to.deep.equals([
+      {
+        severity: 'INFO',
+        message: 'Unsupported inline type: subscript, using raw text.'
+      },
+      {
+        severity: 'INFO',
+        message: 'Unsupported inline type: superscript, using raw text.'
+      }
+    ])
+  })
 })

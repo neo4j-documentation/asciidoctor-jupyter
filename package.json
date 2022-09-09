@@ -25,10 +25,10 @@
   },
   "homepage": "https://github.com/neo4j-documentation/asciidoctor-jupyter#readme",
   "devDependencies": {
-    "@asciidoctor/core": "^2.2.1",
-    "chai": "^4.3.0",
-    "dirty-chai": "^2.0.1",
-    "mocha": "^8.2.1",
-    "standard": "^16.0.3"
+    "@asciidoctor/core": "~2.2",
+    "chai": "~4.3",
+    "dirty-chai": "~2.0",
+    "mocha": "~10.0",
+    "standard": "~17.0"
   }
 }
