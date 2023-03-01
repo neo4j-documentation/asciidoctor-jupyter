@@ -31,7 +31,7 @@ Paragraph.
 
 Another paragraph.
 
-[source,cypher]
+[source, python]
 ----
 First query
 ----
@@ -39,7 +39,7 @@ First query
 
 Third paragraph.
 
-[source,cypher]
+[source, py]
 ----
 Second Query
 ----
@@ -56,7 +56,7 @@ Fourth paragraph.
 
 === Section 3.2
 
-[source,cypher]
+[source, python]
 ----
 Third Query
 ----
@@ -68,7 +68,7 @@ Fifth paragraph.
 
 Sixth paragraph.
 
-[source,cypher]
+[source, python]
 ----
 Fourth Query
 ----
