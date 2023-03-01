@@ -114,17 +114,26 @@ class JupyterConverter {
       const length = lines.length
       const source = lines
         .map((l, index) => length === index + 1 ? l : l + '\n')
-      return [{
-        cell_type: 'code',
-        execution_count: 0,
-        metadata: {
-          slideshow: {
-            slide_type: 'fragment'
-          }
-        },
-        outputs: [],
-        source
-      }]
+      const language = node.getAttribute('language')
+      if (language === 'python' || language === 'py') {
+        return [{
+          cell_type: 'code',
+          execution_count: 0,
+          metadata: {
+            slideshow: {
+              slide_type: 'fragment'
+            }
+          },
+          outputs: [],
+          source
+        }]
+      } else {
+        return [{
+          cell_type: 'markdown',
+          source: ['```' + language, ...source, '```'],
+          metadata: {}
+        }]
+      }
     }
     if (nodeName === 'image') {
       const image = `![${node.getAttribute('alt')}](${node.getImageUri(node.getAttribute('target'))})`
