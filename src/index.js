@@ -175,7 +175,7 @@ class JupyterConverter {
         cells[0].source.unshift('\n')
       }
       if (cells.length > 1) {
-        cells[cells.length - 1].source.push('\n')
+        cells[cells.length - 1].source.push('\n\n')
       }
       return cells
     }
