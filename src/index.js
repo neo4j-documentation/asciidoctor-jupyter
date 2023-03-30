@@ -299,8 +299,8 @@ class JupyterConverter {
       if (type === 'strong') {
         return `**${node.getText()}**`
       }
-      if (type === 'asciimath') {
-        return `\\\\(${node.getText()}\\\\)`
+      if (type === 'asciimath' || type === 'latexmath') {
+        return `$${node.getText()}$`
       }
       if (type === 'unquoted') {
         return node.getText()
