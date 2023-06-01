@@ -4,11 +4,13 @@ class JupyterConverter {
     // this.basebackend = 'json'
     this.outfilesuffix = '.ipynb'
     this.filetype = 'json'
+    this.ignoredNodes = []
   }
 
   convert (node, transform) {
     const nodeName = transform || node.getNodeName()
     if (nodeName === 'document' || nodeName === 'embedded') {
+      this.ignoredNodes = []
       const languageName = node.getAttribute('jupyter-language-name', 'python')
       const languageVersion = node.getAttribute('jupyter-language-version', '3.9.1')
       const blocks = node.getBlocks()
@@ -42,6 +44,9 @@ class JupyterConverter {
         },
         nbformat: 4,
         nbformat_minor: 4
+      }
+      if (this.ignoredNodes.length > 0) {
+        logger.warn(`Unsupported nodes [${Array.from(new Set(this.ignoredNodes.map(item => item.name))).join(', ')}], some content might be missing!`)
       }
       return JSON.stringify(result)
     }
@@ -255,8 +260,7 @@ class JupyterConverter {
         cell_type: 'markdown',
         source: [`*${node.getAttribute('textlabel')}:* `],
         metadata: {}
-      }
-      )
+      })
       let lastCell = {}
       if (node.hasBlocks()) {
         const blocks = node.getBlocks()
@@ -285,7 +289,7 @@ class JupyterConverter {
         return `[${node.getText()}](${node.getTarget()})`
       }
       // unsupported link type!
-      logger.warn(`Unsupported inline_anchor type: ${type}, ignoring.`)
+      this.ignoredNodes.push({ name: `inline_anchor>${type}` })
       return ''
     }
     if (nodeName === 'inline_quoted') {
@@ -316,7 +320,41 @@ class JupyterConverter {
       return image
     }
 
-    logger.warn(`Unsupported node: ${nodeName}, ignoring.`)
+    if (nodeName === 'dlist') {
+      let source = ''
+      for (const [terms, dd] of node.getItems()) {
+        for (const term of terms) {
+          source += `* **${term.getText()}**\\`
+        }
+        if (dd) {
+          if (dd.hasText()) {
+            source += `
+${dd.getText()}
+`
+          }
+          if (dd.hasBlocks()) {
+            source += '\n'
+            for (const block of dd.getBlocks()) {
+              const content = block.convert()
+              if (content && content.length === 1 && content[0].cell_type === 'markdown') {
+                source += `  ${content[0].source.join('\n  ')}\n`
+              } else {
+                // ignore
+                this.ignoredNodes.push({ name: `dlist>${block.getNodeName()}` })
+              }
+            }
+            source += '\n'
+          }
+        }
+      }
+      return [{
+        cell_type: 'markdown',
+        source: [source],
+        metadata: {}
+      }]
+    }
+
+    this.ignoredNodes.push({ name: nodeName })
     return ''
   }
 

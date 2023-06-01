@@ -1,0 +1,11 @@
+CPU::
+The brain of the computer.
+It performs operations on an external data source, usually memory or some other data stream.
++
+Traditional processors are typically based on silicon.
++
+[source,js]
+----
+console.log('hello')
+----
+Hard drive:: Permanent storage for operating system and/or user files.
