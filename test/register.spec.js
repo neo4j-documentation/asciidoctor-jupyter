@@ -21,12 +21,13 @@ describe('Jupyter converter', () => {
       const ipynb = JSON.parse(result)
       expect(ipynb.metadata.language_info.name).is.equal('python')
       expect(ipynb.metadata.language_info.version).is.equal('2.7.10')
-      expect(ipynb.cells.length).is.equal(35)
+      expect(ipynb.cells.length).is.equal(32)
       const codeCells = ipynb.cells.filter(cell => cell.cell_type === 'code')
       expect(codeCells.length).is.equal(21)
       expect(codeCells[0].source.join('')).is.equal(`from py2neo import Graph
 
-graph = Graph()`)
+graph = Graph()
+`)
     } finally {
       asciidoctor.Extensions.unregisterAll()
     }
