@@ -270,4 +270,52 @@ Another paragraph.
     const ipynb = JSON.parse(result)
     expect(ipynb.cells[0].source[0]).is.equal('Happy werewolves are *really* slobbery.\n')
   })
+  it('should convert basic dlist', async () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'basic-dlist.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    await debug(result, 'basic-dlist.ipynb')
+    expect(ipynb.cells[0].source[0]).is.equal(`* **CPU**\\
+The brain of the computer.
+* **Hard drive**\\
+Permanent storage for operating system and/or user files.
+* **RAM**\\
+Temporarily stores information the CPU uses during operation.
+* **Keyboard**\\
+Used to enter text or control items on the screen.
+* **Mouse**\\
+Used to point to and select items on your computer screen.
+* **Monitor**\\
+Displays information in visual form using text and graphics.
+`)
+  })
+  it('should convert complex dlist', async () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'complex-dlist.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    await debug(result, 'complex-dlist.ipynb')
+    expect(ipynb.cells[0].source[0]).is.equal(`* **CPU**\\
+The brain of the computer.
+It performs operations on an external data source, usually memory or some other data stream.
+
+  Traditional processors are typically based on silicon.
+
+  \`\`\`js
+  console.log('hello')
+  \`\`\`
+
+* **Hard drive**\\
+Permanent storage for operating system and/or user files.
+`)
+  })
 })
