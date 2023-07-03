@@ -16,10 +16,10 @@ class JupyterConverter {
       const blocks = node.getBlocks()
       const cells = []
       let lastCell = {}
-      for (const block of blocks) {
+      for (const [index, block] of blocks.entries()) {
         const result = block.convert()
         if (lastCell.cell_type === 'markdown') {
-          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells)
+          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells, index < blocks.length ? '\n' : '')
         } else {
           if (cells.length === 0) {
             const firstCell = result[0]
@@ -155,7 +155,7 @@ class JupyterConverter {
     }
     if (nodeName === 'listing') {
       const lines = node.lines
-      const source = lines.map((l, index) => l + '\n')
+      const source = lines.map((l) => l + '\n')
       const language = node.getAttribute('language')
       if (language === 'python' || language === 'py') {
         return [{
@@ -173,7 +173,9 @@ class JupyterConverter {
         return [{
           cell_type: 'markdown',
           source: ['```' + (language || '') + '\n', ...source, '```'],
-          metadata: {}
+          metadata: {
+            node_name: nodeName
+          }
         }]
       }
     }
@@ -185,7 +187,9 @@ class JupyterConverter {
       return [{
         cell_type: 'markdown',
         source: ['\n', `${image}\n`, '\n'],
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       }]
     }
     if (nodeName === 'ulist' || nodeName === 'olist') {
@@ -196,7 +200,9 @@ class JupyterConverter {
         cells.push({
           cell_type: 'markdown',
           source: [`${symbol} ${item.getText()}\n`],
-          metadata: {}
+          metadata: {
+            node_name: nodeName
+          }
         })
         if (item.hasBlocks()) {
           const blocks = item.getBlocks()
@@ -265,7 +271,9 @@ class JupyterConverter {
       return [{
         cell_type: 'markdown',
         source: lines,
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       }]
     }
     if (nodeName === 'quote') {
@@ -296,7 +304,9 @@ class JupyterConverter {
       cells.push({
         cell_type: 'markdown',
         source: [`*${node.getAttribute('textlabel')}:* `],
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       })
       let lastCell = {}
       if (node.hasBlocks()) {
@@ -324,6 +334,20 @@ class JupyterConverter {
       const type = node.getType()
       if (type === 'link') {
         return `[${node.getText()}](${node.getTarget()})`
+      }
+      if (type === 'xref') {
+        const path = node.getAttribute('path')
+        let text
+        if (path) {
+          text = node.getText() || path
+        } else {
+          text = node.getText()
+          if (!text) {
+            const refId = node.getAttribute('refid')
+            text = `[${refId}]`
+          }
+        }
+        return `[${text}](${node.getTarget()})`
       }
       // unsupported link type!
       this.ignoredNodes.push({ name: `inline_anchor>${type}` })
@@ -386,7 +410,9 @@ ${dd.getText()}
       return [{
         cell_type: 'markdown',
         source: [source],
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       }]
     }
     if (nodeName === 'colist') {
@@ -398,7 +424,9 @@ ${dd.getText()}
       return [{
         cell_type: 'markdown',
         source,
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       }]
     }
 
@@ -411,13 +439,13 @@ ${dd.getText()}
    * @param result
    * @param lastCell
    * @param cells
-   * @joinCharacter {string} ''
+   * @param joinCharacter {string} ''
    * @returns lastCell
    */
   mergeAdjacentMarkdownCells (result, lastCell, cells, joinCharacter = '') {
-    if (result) {
+    if (result && result.length > 0) {
       if (!result.find(cell => cell.cell_type !== 'markdown')) {
-        if (joinCharacter !== '') {
+        if (joinCharacter !== '' && result[0].metadata && result[0].metadata.node_name !== 'colist') {
           lastCell.source[lastCell.source.length - 1] = lastCell.source[lastCell.source.length - 1] + joinCharacter
         }
         lastCell.source.push(...result.reduce((acc, cell) => acc.concat(cell.source), [])) // flatMap Node > 11
