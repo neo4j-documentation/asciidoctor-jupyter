@@ -337,4 +337,20 @@ git clone https://github.com/feelpp/toolbox.git # <2>
 1. clone the source for the website
 2. clone the source for toolbox cases`)
   })
+  it('should convert example block', async () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'example-block.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    await debug(result, 'colist.ipynb')
+    expect(ipynb.cells[0].source.join('')).is.equal(`*Onomatopoeia*\\
+The book hit the floor with a **thud**.
+
+He could hear doves **cooing** in the pine trees&#8217; branches.
+`)
+  })
 })
