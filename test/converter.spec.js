@@ -63,7 +63,6 @@ graph = Graph()
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('3.7.8')
     expect(ipynb.cells.length).is.equal(7)
-    await debug(result, 'lorenz-differential-equations.ipynb')
   })
   it('should convert an exercise guide with a complex list to ipynb', async () => {
     const inputFile = path.join(__dirname, 'fixtures', 'list-continuation.adoc')
@@ -77,7 +76,6 @@ graph = Graph()
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
     expect(ipynb.cells.length).is.equal(3)
-    await debug(result, 'list-continuation.ipynb')
   })
   it('should convert an exercise guide with a inline style list to ipynb', async () => {
     const inputFile = path.join(__dirname, 'fixtures', 'inline-style.adoc')
@@ -159,10 +157,15 @@ If set X is a subset of Y or vice versa then the overlap coefficient is equal to
     expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
     expect(ipynb.cells.length).is.equal(1)
     expect(ipynb.cells[0].source.join('')).is.equal(`*Note:* An admonition draws attention to auxiliary information.
+
 Here are the other built-in admonition types:
+
 *Tip:* Pro tip&#8230;&#8203;
+
 *Important:* Don&#8217;t forget&#8230;&#8203;
+
 *Warning:* Watch out for&#8230;&#8203;
+
 *Caution:* Ensure that&#8230;&#8203;
 `)
   })
@@ -281,7 +284,6 @@ Another paragraph.
     })
     expect(result).is.not.empty()
     const ipynb = JSON.parse(result)
-    await debug(result, 'basic-dlist.ipynb')
     expect(ipynb.cells[0].source[0]).is.equal(`* **CPU**\\
 The brain of the computer.
 * **Hard drive**\\
@@ -305,7 +307,6 @@ Displays information in visual form using text and graphics.
     })
     expect(result).is.not.empty()
     const ipynb = JSON.parse(result)
-    await debug(result, 'complex-dlist.ipynb')
     expect(ipynb.cells[0].source[0]).is.equal(`* **CPU**\\
 The brain of the computer.
 It performs operations on an external data source, usually memory or some other data stream.
@@ -329,7 +330,6 @@ Permanent storage for operating system and/or user files.
     })
     expect(result).is.not.empty()
     const ipynb = JSON.parse(result)
-    await debug(result, 'colist.ipynb')
     expect(ipynb.cells[0].source.join('')).is.equal(`\`\`\`
 git clone https://github.com/feelpp/book.feelpp.org.git # <1>
 git clone https://github.com/feelpp/toolbox.git # <2>
@@ -346,11 +346,26 @@ git clone https://github.com/feelpp/toolbox.git # <2>
     })
     expect(result).is.not.empty()
     const ipynb = JSON.parse(result)
-    await debug(result, 'colist.ipynb')
     expect(ipynb.cells[0].source.join('')).is.equal(`*Onomatopoeia*\\
 The book hit the floor with a **thud**.
 
 He could hear doves **cooing** in the pine trees&#8217; branches.
 `)
+  })
+  it('should convert xrefs', async () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'xrefs.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    debug()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells[0].source.join('')).is.equal(`[Refcard](refcard.pdf)
+
+[[sect-a]](#sect-a)
+`)
+    await debug(result, 'xrefs.ipynb')
   })
 })
