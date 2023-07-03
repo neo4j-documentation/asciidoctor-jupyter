@@ -104,6 +104,37 @@ class JupyterConverter {
       }
       return cells
     }
+    if (nodeName === 'example') {
+      const blocks = node.getBlocks()
+      const cells = []
+      let lastCell = {}
+      for (const block of blocks) {
+        const result = block.convert()
+        // merge adjacent cells with the same type
+        if (lastCell.cell_type === 'markdown') {
+          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells, '\n')
+        } else {
+          if (cells.length === 0) {
+            const firstCell = result[0]
+            // attach section title
+            if (node.getTitle()) {
+              if (firstCell && firstCell.cell_type === 'markdown') {
+                firstCell.source.unshift(`*${node.getTitle()}*\\\n`)
+              } else {
+                cells.push({
+                  cell_type: 'markdown',
+                  source: [`*${node.getTitle()}*\\\n`],
+                  metadata: {}
+                })
+              }
+            }
+          }
+          cells.push(...result)
+          lastCell = cells[cells.length - 1]
+        }
+      }
+      return cells
+    }
     if (nodeName === 'stem') {
       return [{
         cell_type: 'markdown',
@@ -380,11 +411,15 @@ ${dd.getText()}
    * @param result
    * @param lastCell
    * @param cells
+   * @joinCharacter {string} ''
    * @returns lastCell
    */
-  mergeAdjacentMarkdownCells (result, lastCell, cells) {
+  mergeAdjacentMarkdownCells (result, lastCell, cells, joinCharacter = '') {
     if (result) {
       if (!result.find(cell => cell.cell_type !== 'markdown')) {
+        if (joinCharacter !== '') {
+          lastCell.source[lastCell.source.length - 1] = lastCell.source[lastCell.source.length - 1] + joinCharacter
+        }
         lastCell.source.push(...result.reduce((acc, cell) => acc.concat(cell.source), [])) // flatMap Node > 11
       } else {
         const adjacentMarkdownCells = []
