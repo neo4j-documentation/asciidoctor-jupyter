@@ -30,12 +30,13 @@ describe('Jupyter converter', () => {
     const ipynb = JSON.parse(result)
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('2.7.10')
-    expect(ipynb.cells.length).is.equal(35)
+    expect(ipynb.cells.length).is.equal(32)
     const codeCells = ipynb.cells.filter(cell => cell.cell_type === 'code')
     expect(codeCells.length).is.equal(21)
     expect(codeCells[0].source.join('')).is.equal(`from py2neo import Graph
 
-graph = Graph()`)
+graph = Graph()
+`)
   })
   it('should convert an exercise guide to ipynb', async () => {
     const inputFile = path.join(__dirname, 'fixtures', 'intro-neo4j-guides-01.adoc')
@@ -48,7 +49,7 @@ graph = Graph()`)
     const ipynb = JSON.parse(result)
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
-    expect(ipynb.cells.length).is.equal(11)
+    expect(ipynb.cells.length).is.equal(1)
   })
   it('should convert stem blocks to ipynb', async () => {
     const inputFile = path.join(__dirname, 'fixtures', 'lorenz-differential-equations.adoc')
@@ -61,7 +62,7 @@ graph = Graph()`)
     const ipynb = JSON.parse(result)
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('3.7.8')
-    expect(ipynb.cells.length).is.equal(10)
+    expect(ipynb.cells.length).is.equal(7)
     await debug(result, 'lorenz-differential-equations.ipynb')
   })
   it('should convert an exercise guide with a complex list to ipynb', async () => {
@@ -156,13 +157,14 @@ If set X is a subset of Y or vice versa then the overlap coefficient is equal to
     const ipynb = JSON.parse(result)
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('3.9.1')
-    expect(ipynb.cells.length).is.equal(6)
-    expect(ipynb.cells[0].source.join('')).is.equal('*Note:* An admonition draws attention to auxiliary information.\n')
-    expect(ipynb.cells[1].source.join('')).is.equal('Here are the other built-in admonition types:\n')
-    expect(ipynb.cells[2].source.join('')).is.equal('*Tip:* Pro tip&#8230;&#8203;\n')
-    expect(ipynb.cells[3].source.join('')).is.equal('*Important:* Don&#8217;t forget&#8230;&#8203;\n')
-    expect(ipynb.cells[4].source.join('')).is.equal('*Warning:* Watch out for&#8230;&#8203;\n')
-    expect(ipynb.cells[5].source.join('')).is.equal('*Caution:* Ensure that&#8230;&#8203;\n')
+    expect(ipynb.cells.length).is.equal(1)
+    expect(ipynb.cells[0].source.join('')).is.equal(`*Note:* An admonition draws attention to auxiliary information.
+Here are the other built-in admonition types:
+*Tip:* Pro tip&#8230;&#8203;
+*Important:* Don&#8217;t forget&#8230;&#8203;
+*Warning:* Watch out for&#8230;&#8203;
+*Caution:* Ensure that&#8230;&#8203;
+`)
   })
   it('should convert an exercise guide with an admonition block to ipynb', async () => {
     const inputFile = path.join(__dirname, 'fixtures', 'admonition-block.adoc')
@@ -317,5 +319,22 @@ It performs operations on an external data source, usually memory or some other 
 * **Hard drive**\\
 Permanent storage for operating system and/or user files.
 `)
+  })
+  it('should convert colist', async () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'colist.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    await debug(result, 'colist.ipynb')
+    expect(ipynb.cells[0].source.join('')).is.equal(`\`\`\`
+git clone https://github.com/feelpp/book.feelpp.org.git # <1>
+git clone https://github.com/feelpp/toolbox.git # <2>
+\`\`\`
+1. clone the source for the website
+2. clone the source for toolbox cases`)
   })
 })

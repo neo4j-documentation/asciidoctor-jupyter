@@ -15,24 +15,32 @@ class JupyterConverter {
       const languageVersion = node.getAttribute('jupyter-language-version', '3.9.1')
       const blocks = node.getBlocks()
       const cells = []
+      let lastCell = {}
       for (const block of blocks) {
         const result = block.convert()
-        if (cells.length === 0) {
-          const firstCell = result[0]
-          // attach document title
-          if (node.hasHeader() && node.getDocumentTitle()) {
-            if (firstCell && firstCell.cell_type === 'markdown') {
-              firstCell.source.unshift(`# ${node.getDocumentTitle()}\n\n`)
-            } else {
-              cells.push({
-                cell_type: 'markdown',
-                source: [`# ${node.getDocumentTitle()}\n\n`],
-                metadata: {}
-              })
+        if (lastCell.cell_type === 'markdown') {
+          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells)
+        } else {
+          if (cells.length === 0) {
+            const firstCell = result[0]
+            // attach document title
+            if (node.hasHeader() && node.getDocumentTitle()) {
+              if (firstCell && firstCell.cell_type === 'markdown') {
+                firstCell.source.unshift(`# ${node.getDocumentTitle()}\n\n`)
+              } else {
+                cells.push({
+                  cell_type: 'markdown',
+                  source: [`# ${node.getDocumentTitle()}\n\n`],
+                  metadata: {}
+                })
+              }
             }
           }
+          cells.push(...result)
+          if (cells.length > 0) {
+            lastCell = cells[cells.length - 1]
+          }
         }
-        cells.push(...result)
       }
       const result = {
         cells,
@@ -116,9 +124,7 @@ class JupyterConverter {
     }
     if (nodeName === 'listing') {
       const lines = node.lines
-      const length = lines.length
-      const source = lines
-        .map((l, index) => length === index + 1 ? l : l + '\n')
+      const source = lines.map((l, index) => l + '\n')
       const language = node.getAttribute('language')
       if (language === 'python' || language === 'py') {
         return [{
@@ -135,7 +141,7 @@ class JupyterConverter {
       } else {
         return [{
           cell_type: 'markdown',
-          source: ['```' + language, ...source, '```'],
+          source: ['```' + (language || '') + '\n', ...source, '```'],
           metadata: {}
         }]
       }
@@ -319,7 +325,6 @@ class JupyterConverter {
       }
       return image
     }
-
     if (nodeName === 'dlist') {
       let source = ''
       for (const [terms, dd] of node.getItems()) {
@@ -337,7 +342,7 @@ ${dd.getText()}
             for (const block of dd.getBlocks()) {
               const content = block.convert()
               if (content && content.length === 1 && content[0].cell_type === 'markdown') {
-                source += `  ${content[0].source.join('\n  ')}\n`
+                source += `  ${content[0].source.join('  ')}\n`
               } else {
                 // ignore
                 this.ignoredNodes.push({ name: `dlist>${block.getNodeName()}` })
@@ -350,6 +355,18 @@ ${dd.getText()}
       return [{
         cell_type: 'markdown',
         source: [source],
+        metadata: {}
+      }]
+    }
+    if (nodeName === 'colist') {
+      const source = []
+      for (const [index, item] of node.getItems().entries()) {
+        source.push(`\n${index + 1}. ${item.text}`)
+      }
+      source.push('')
+      return [{
+        cell_type: 'markdown',
+        source,
         metadata: {}
       }]
     }
