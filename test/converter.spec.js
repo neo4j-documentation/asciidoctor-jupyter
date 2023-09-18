@@ -360,12 +360,32 @@ He could hear doves **cooing** in the pine trees&#8217; branches.
       to_file: false
     })
     expect(result).is.not.empty()
-    debug()
     const ipynb = JSON.parse(result)
     expect(ipynb.cells[0].source.join('')).is.equal(`[Refcard](refcard.pdf)
 
 [[sect-a]](#sect-a)
 `)
     await debug(result, 'xrefs.ipynb')
+  })
+  it('should convert nested blocks', async () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'nested-blocks.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells[0].source.join('')).is.equal(`# Nested Blocks
+
+*Title*\\
+Example&#8230;&#8203;
+
+
+$$
+A_1=\\left(\\begin{array}{lll}
+$$
+`)
+    await debug(result, 'nested-blocks.ipynb')
   })
 })

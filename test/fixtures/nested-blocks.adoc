@@ -1,0 +1,11 @@
+= Nested Blocks
+
+.Title
+[.style]
+****
+Example...
+[stem]
+++++
+A_1=\left(\begin{array}{lll}
+++++
+****

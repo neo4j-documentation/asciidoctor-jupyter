@@ -104,7 +104,7 @@ class JupyterConverter {
       }
       return cells
     }
-    if (nodeName === 'example') {
+    if (nodeName === 'example' || nodeName === 'sidebar') {
       const blocks = node.getBlocks()
       const cells = []
       let lastCell = {}
