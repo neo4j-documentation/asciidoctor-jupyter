@@ -1,3 +1,4 @@
+/* global Opal */
 class JupyterConverter {
   constructor (backend) {
     this.backend = backend
@@ -386,7 +387,7 @@ class JupyterConverter {
         for (const term of terms) {
           source += `* **${term.getText()}**\\`
         }
-        if (dd) {
+        if (dd && dd !== Opal.nil) {
           if (dd.hasText()) {
             source += `
 ${dd.getText()}
