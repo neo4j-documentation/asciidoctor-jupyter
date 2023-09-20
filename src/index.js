@@ -4,33 +4,43 @@ class JupyterConverter {
     // this.basebackend = 'json'
     this.outfilesuffix = '.ipynb'
     this.filetype = 'json'
+    this.ignoredNodes = []
   }
 
   convert (node, transform) {
     const nodeName = transform || node.getNodeName()
     if (nodeName === 'document' || nodeName === 'embedded') {
+      this.ignoredNodes = []
       const languageName = node.getAttribute('jupyter-language-name', 'python')
       const languageVersion = node.getAttribute('jupyter-language-version', '3.9.1')
       const blocks = node.getBlocks()
       const cells = []
-      for (const block of blocks) {
+      let lastCell = {}
+      for (const [index, block] of blocks.entries()) {
         const result = block.convert()
-        if (cells.length === 0) {
-          const firstCell = result[0]
-          // attach document title
-          if (node.hasHeader() && node.getDocumentTitle()) {
-            if (firstCell && firstCell.cell_type === 'markdown') {
-              firstCell.source.unshift(`# ${node.getDocumentTitle()}\n\n`)
-            } else {
-              cells.push({
-                cell_type: 'markdown',
-                source: [`# ${node.getDocumentTitle()}\n\n`],
-                metadata: {}
-              })
+        if (lastCell.cell_type === 'markdown') {
+          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells, index < blocks.length ? '\n' : '')
+        } else {
+          if (cells.length === 0) {
+            const firstCell = result[0]
+            // attach document title
+            if (node.hasHeader() && node.getDocumentTitle()) {
+              if (firstCell && firstCell.cell_type === 'markdown') {
+                firstCell.source.unshift(`# ${node.getDocumentTitle()}\n\n`)
+              } else {
+                cells.push({
+                  cell_type: 'markdown',
+                  source: [`# ${node.getDocumentTitle()}\n\n`],
+                  metadata: {}
+                })
+              }
             }
           }
+          cells.push(...result)
+          if (cells.length > 0) {
+            lastCell = cells[cells.length - 1]
+          }
         }
-        cells.push(...result)
       }
       const result = {
         cells,
@@ -42,6 +52,9 @@ class JupyterConverter {
         },
         nbformat: 4,
         nbformat_minor: 4
+      }
+      if (this.ignoredNodes.length > 0) {
+        logger.warn(`Unsupported nodes [${Array.from(new Set(this.ignoredNodes.map(item => item.name))).join(', ')}], some content might be missing!`)
       }
       return JSON.stringify(result)
     }
@@ -91,6 +104,37 @@ class JupyterConverter {
       }
       return cells
     }
+    if (nodeName === 'example' || nodeName === 'sidebar') {
+      const blocks = node.getBlocks()
+      const cells = []
+      let lastCell = {}
+      for (const block of blocks) {
+        const result = block.convert()
+        // merge adjacent cells with the same type
+        if (lastCell.cell_type === 'markdown') {
+          lastCell = this.mergeAdjacentMarkdownCells(result, lastCell, cells, '\n')
+        } else {
+          if (cells.length === 0) {
+            const firstCell = result[0]
+            // attach section title
+            if (node.getTitle()) {
+              if (firstCell && firstCell.cell_type === 'markdown') {
+                firstCell.source.unshift(`*${node.getTitle()}*\\\n`)
+              } else {
+                cells.push({
+                  cell_type: 'markdown',
+                  source: [`*${node.getTitle()}*\\\n`],
+                  metadata: {}
+                })
+              }
+            }
+          }
+          cells.push(...result)
+          lastCell = cells[cells.length - 1]
+        }
+      }
+      return cells
+    }
     if (nodeName === 'stem') {
       return [{
         cell_type: 'markdown',
@@ -111,9 +155,7 @@ class JupyterConverter {
     }
     if (nodeName === 'listing') {
       const lines = node.lines
-      const length = lines.length
-      const source = lines
-        .map((l, index) => length === index + 1 ? l : l + '\n')
+      const source = lines.map((l) => l + '\n')
       const language = node.getAttribute('language')
       if (language === 'python' || language === 'py') {
         return [{
@@ -130,8 +172,10 @@ class JupyterConverter {
       } else {
         return [{
           cell_type: 'markdown',
-          source: ['```' + language, ...source, '```'],
-          metadata: {}
+          source: ['```' + (language || '') + '\n', ...source, '```'],
+          metadata: {
+            node_name: nodeName
+          }
         }]
       }
     }
@@ -143,7 +187,9 @@ class JupyterConverter {
       return [{
         cell_type: 'markdown',
         source: ['\n', `${image}\n`, '\n'],
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       }]
     }
     if (nodeName === 'ulist' || nodeName === 'olist') {
@@ -154,7 +200,9 @@ class JupyterConverter {
         cells.push({
           cell_type: 'markdown',
           source: [`${symbol} ${item.getText()}\n`],
-          metadata: {}
+          metadata: {
+            node_name: nodeName
+          }
         })
         if (item.hasBlocks()) {
           const blocks = item.getBlocks()
@@ -223,7 +271,9 @@ class JupyterConverter {
       return [{
         cell_type: 'markdown',
         source: lines,
-        metadata: {}
+        metadata: {
+          node_name: nodeName
+        }
       }]
     }
     if (nodeName === 'quote') {
@@ -254,9 +304,10 @@ class JupyterConverter {
       cells.push({
         cell_type: 'markdown',
         source: [`*${node.getAttribute('textlabel')}:* `],
-        metadata: {}
-      }
-      )
+        metadata: {
+          node_name: nodeName
+        }
+      })
       let lastCell = {}
       if (node.hasBlocks()) {
         const blocks = node.getBlocks()
@@ -284,8 +335,22 @@ class JupyterConverter {
       if (type === 'link') {
         return `[${node.getText()}](${node.getTarget()})`
       }
+      if (type === 'xref') {
+        const path = node.getAttribute('path')
+        let text
+        if (path) {
+          text = node.getText() || path
+        } else {
+          text = node.getText()
+          if (!text) {
+            const refId = node.getAttribute('refid')
+            text = `[${refId}]`
+          }
+        }
+        return `[${text}](${node.getTarget()})`
+      }
       // unsupported link type!
-      logger.warn(`Unsupported inline_anchor type: ${type}, ignoring.`)
+      this.ignoredNodes.push({ name: `inline_anchor>${type}` })
       return ''
     }
     if (nodeName === 'inline_quoted') {
@@ -315,8 +380,57 @@ class JupyterConverter {
       }
       return image
     }
+    if (nodeName === 'dlist') {
+      let source = ''
+      for (const [terms, dd] of node.getItems()) {
+        for (const term of terms) {
+          source += `* **${term.getText()}**\\`
+        }
+        if (dd) {
+          if (dd.hasText()) {
+            source += `
+${dd.getText()}
+`
+          }
+          if (dd.hasBlocks()) {
+            source += '\n'
+            for (const block of dd.getBlocks()) {
+              const content = block.convert()
+              if (content && content.length === 1 && content[0].cell_type === 'markdown') {
+                source += `  ${content[0].source.join('  ')}\n`
+              } else {
+                // ignore
+                this.ignoredNodes.push({ name: `dlist>${block.getNodeName()}` })
+              }
+            }
+            source += '\n'
+          }
+        }
+      }
+      return [{
+        cell_type: 'markdown',
+        source: [source],
+        metadata: {
+          node_name: nodeName
+        }
+      }]
+    }
+    if (nodeName === 'colist') {
+      const source = []
+      for (const [index, item] of node.getItems().entries()) {
+        source.push(`\n${index + 1}. ${item.text}`)
+      }
+      source.push('')
+      return [{
+        cell_type: 'markdown',
+        source,
+        metadata: {
+          node_name: nodeName
+        }
+      }]
+    }
 
-    logger.warn(`Unsupported node: ${nodeName}, ignoring.`)
+    this.ignoredNodes.push({ name: nodeName })
     return ''
   }
 
@@ -325,11 +439,15 @@ class JupyterConverter {
    * @param result
    * @param lastCell
    * @param cells
+   * @param joinCharacter {string} ''
    * @returns lastCell
    */
-  mergeAdjacentMarkdownCells (result, lastCell, cells) {
-    if (result) {
+  mergeAdjacentMarkdownCells (result, lastCell, cells, joinCharacter = '') {
+    if (result && result.length > 0) {
       if (!result.find(cell => cell.cell_type !== 'markdown')) {
+        if (joinCharacter !== '' && result[0].metadata && result[0].metadata.node_name !== 'colist') {
+          lastCell.source[lastCell.source.length - 1] = lastCell.source[lastCell.source.length - 1] + joinCharacter
+        }
         lastCell.source.push(...result.reduce((acc, cell) => acc.concat(cell.source), [])) // flatMap Node > 11
       } else {
         const adjacentMarkdownCells = []
