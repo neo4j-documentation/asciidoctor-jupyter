@@ -1,0 +1,32 @@
+.myfunc.hpp+
+[source,cpp]
+----
+#ifndef __MYFUNC_HPP__ #define __MYFUNC_HPP__
+
+void mymsg();
+
+#endif
+----
+
+.myfunc.cpp
+[source,cpp]
+----
+#include <iostream>
+
+void mymsg()
+{
+  std::cout << "Hello, world";
+}
+----
+
+.mymain.cpp
+[source,cpp]
+----
+#include "myfunc.hpp"
+
+int main()
+{
+mymsg();
+return 0;
+}
+----
