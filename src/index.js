@@ -169,6 +169,18 @@ class JupyterConverter {
           outputs: [],
           source
         }]
+      } else if (language === 'cpp' || language === 'c++') {
+        return [{
+          cell_type: 'code',
+          execution_count: 0,
+          metadata: {
+            slideshow: {
+              slide_type: 'fragment'
+            }
+          },
+          outputs: [],
+          source
+        }]
       } else {
         return [{
           cell_type: 'markdown',
