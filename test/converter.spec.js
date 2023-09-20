@@ -388,4 +388,23 @@ $$
 `)
     await debug(result, 'nested-blocks.ipynb')
   })
+  it('should convert a description list without text', () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'description-list-without-text.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells[0].source.join('')).is.equal(`# Basics
+
+## Introduction
+
+* **Basic Matrix Creation**\\`)
+    expect(ipynb.cells[1].source.join('')).is.equal(`import numpy as np
+matrix = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+print(f"matrix={matrix}")
+`)
+  })
 })
