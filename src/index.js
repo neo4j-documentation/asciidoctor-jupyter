@@ -447,7 +447,10 @@ ${dd.getText()}
     if (result && result.length > 0) {
       if (!result.find(cell => cell.cell_type !== 'markdown')) {
         if (joinCharacter !== '' && result[0].metadata && result[0].metadata.node_name !== 'colist') {
-          lastCell.source[lastCell.source.length - 1] = lastCell.source[lastCell.source.length - 1] + joinCharacter
+          const blockJoiner = result[0].metadata.node_name === 'listing' && lastCell.metadata.node_name === 'listing'
+            ? '\n'
+            : ''
+          lastCell.source[lastCell.source.length - 1] = lastCell.source[lastCell.source.length - 1] + joinCharacter + blockJoiner
         }
         lastCell.source.push(...result.reduce((acc, cell) => acc.concat(cell.source), [])) // flatMap Node > 11
       } else {

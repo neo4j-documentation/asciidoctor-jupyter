@@ -407,4 +407,40 @@ matrix = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
 print(f"matrix={matrix}")
 `)
   })
+  it('should convert code blocks as Markdown', () => {
+    const inputFile = path.join(__dirname, 'fixtures', 'multiple-codeblocks.adoc')
+    const result = asciidoctor.convertFile(inputFile, {
+      safe: 'safe',
+      backend: 'jupyter',
+      to_file: false
+    })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells[0].source.join('')).is.equal(`\`\`\`cpp
+#ifndef __MYFUNC_HPP__ #define __MYFUNC_HPP__
+
+void mymsg();
+
+#endif
+\`\`\`
+
+\`\`\`cpp
+#include <iostream>
+
+void mymsg()
+{
+  std::cout << "Hello, world";
+}
+\`\`\`
+
+\`\`\`cpp
+#include "myfunc.hpp"
+
+int main()
+{
+mymsg();
+return 0;
+}
+\`\`\``)
+  })
 })
