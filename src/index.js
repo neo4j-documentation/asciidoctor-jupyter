@@ -14,6 +14,8 @@ class JupyterConverter {
       this.ignoredNodes = []
       const languageName = node.getAttribute('jupyter-language-name', 'python')
       const languageVersion = node.getAttribute('jupyter-language-version', '3.9.1')
+      const kernelName = node.getAttribute('jupyter-kernel-name', 'python3')
+      const kernelLanguage = node.getAttribute('jupyter-kernel-language', 'python')
       const blocks = node.getBlocks()
       const cells = []
       let lastCell = {}
@@ -49,6 +51,10 @@ class JupyterConverter {
           language_info: {
             name: languageName,
             version: languageVersion
+          },
+          kernelspec: {
+            name: kernelName,
+            language: kernelLanguage
           }
         },
         nbformat: 4,
@@ -158,7 +164,16 @@ class JupyterConverter {
       const lines = node.lines
       const source = lines.map((l) => l + '\n')
       const language = node.getAttribute('language')
-      if (language === 'python' || language === 'py') {
+      const languageName = node.getDocument().getAttribute('jupyter-language-name', 'python')
+      let languages
+      if (languageName === 'python' || languageName === 'py') {
+        languages = ['python', 'py']
+      } else if (languageName === 'c++' || languageName === 'cpp') {
+        languages = ['c++', 'cpp']
+      } else {
+        languages = [languageName]
+      }
+      if (languages.includes(language)) {
         return [{
           cell_type: 'code',
           execution_count: 0,

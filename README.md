@@ -96,6 +96,18 @@ And here's the result:
 
 ![](jupyter-lorenz-notebook.png)
 
+## Document attributes
+
+| Name                       | Default Value | Mapping                          |
+|----------------------------|---------------|----------------------------------|
+| `jupyter-language-name`    | `python`      | `metadata.language_info.name`    |
+| `jupyter-language-version` | `3.9.1`       | `metadata.language_info.version` |
+| `jupyter-kernel-name`      | `python3`     | `metadata.kernelspec.name`       |
+| `jupyter-kernel-language`  | `python`      | `metadata.kernelspec.language`   |
+
+**IMPORTANT:** The language name defined in `jupyter-language-name` will be used to decide which AsciiDoc source blocks will be converted to Notebook code cells and which will be converted to Markdown cells.
+For instance, if the Jupyter language name is `python` the converter will convert source blocks that have the language `python` to code cells. Source blocks with other languages will be converted as Markdown cells.
+
 ## Notebook file format
 
 This converter generates [Jupyter notebooks] using [Notebook file format](https://nbformat.readthedocs.io/en/latest/format_description.html) version 4.4.
