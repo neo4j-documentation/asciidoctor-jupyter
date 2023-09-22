@@ -30,6 +30,8 @@ describe('Jupyter converter', () => {
     const ipynb = JSON.parse(result)
     expect(ipynb.metadata.language_info.name).is.equal('python')
     expect(ipynb.metadata.language_info.version).is.equal('2.7.10')
+    expect(ipynb.metadata.kernelspec.name).is.equal('python3')
+    expect(ipynb.metadata.kernelspec.language).is.equal('python')
     expect(ipynb.cells.length).is.equal(32)
     const codeCells = ipynb.cells.filter(cell => cell.cell_type === 'code')
     expect(codeCells.length).is.equal(21)
@@ -37,6 +39,126 @@ describe('Jupyter converter', () => {
 
 graph = Graph()
 `)
+  })
+  it('should configure language with document attributes', async () => {
+    const result = asciidoctor.convert(`= Hello World
+:jupyter-language-name: c++
+:jupyter-language-version: 17
+
+`, { backend: 'jupyter' })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.metadata.language_info.name).is.equal('c++')
+    expect(ipynb.metadata.language_info.version).is.equal('17')
+  })
+  it('should configure kernelspec with document attributes', async () => {
+    const result = asciidoctor.convert(`= Hello World
+:jupyter-language-name: c++
+:jupyter-language-version: 17
+:jupyter-kernel-name: xcpp17
+:jupyter-kernel-language: C++17
+
+`, { backend: 'jupyter' })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.metadata.language_info.name).is.equal('c++')
+    expect(ipynb.metadata.language_info.version).is.equal('17')
+    expect(ipynb.metadata.kernelspec.name).is.equal('xcpp17')
+    expect(ipynb.metadata.kernelspec.language).is.equal('C++17')
+  })
+  it('should convert source blocks depending on language name (C++)', async () => {
+    const result = asciidoctor.convert(`= Hello World
+:jupyter-language-name: c++
+:jupyter-language-version: 17
+:jupyter-kernel-name: xcpp17
+:jupyter-kernel-language: C++17
+
+.Python
+[source,py]
+----
+print('hello')
+----
+
+.C{pp}
+[source,cpp]
+----
+int i=1;
+----
+`, { backend: 'jupyter' })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells.length).is.equal(2)
+    expect(ipynb.cells[0].cell_type).is.equal('markdown')
+    expect(ipynb.cells[0].source.join('')).is.equal(`# Hello World
+
+\`\`\`py
+print('hello')
+\`\`\``)
+    expect(ipynb.cells[1].cell_type).is.equal('code')
+    expect(ipynb.cells[1].source.join('')).is.equal(`int i=1;
+`)
+  })
+  it('should convert source blocks depending on language name (Python)', async () => {
+    const result = asciidoctor.convert(`= Hello World
+:jupyter-language-name: python
+:jupyter-language-version: 3.11.5
+
+.Python
+[source,py]
+----
+print('hello')
+----
+
+.C{pp}
+[source,cpp]
+----
+int i=1;
+----
+`, { backend: 'jupyter' })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells.length).is.equal(3)
+    expect(ipynb.cells[0].cell_type).is.equal('markdown')
+    expect(ipynb.cells[0].source.join('')).is.equal(`# Hello World
+
+`)
+    expect(ipynb.cells[1].cell_type).is.equal('code')
+    expect(ipynb.cells[1].source.join('')).is.equal(`print('hello')
+`)
+    expect(ipynb.cells[2].cell_type).is.equal('markdown')
+    expect(ipynb.cells[2].source.join('')).is.equal(`\`\`\`cpp
+int i=1;
+\`\`\``)
+  })
+  it('should convert source blocks depending on language name (default -> Python)', async () => {
+    const result = asciidoctor.convert(`= Hello World
+
+.Python
+[source,py]
+----
+print('hello')
+----
+
+.C{pp}
+[source,cpp]
+----
+int i=1;
+----
+`, { backend: 'jupyter' })
+    expect(result).is.not.empty()
+    const ipynb = JSON.parse(result)
+    expect(ipynb.cells.length).is.equal(3)
+    expect(ipynb.cells[0].cell_type).is.equal('markdown')
+    expect(ipynb.cells[0].source.join('')).is.equal(`# Hello World
+
+`)
+    expect(ipynb.cells[1].cell_type).is.equal('code')
+    expect(ipynb.cells[1].source.join('')).is.equal(`print('hello')
+`)
+    expect(ipynb.cells[2].cell_type).is.equal('markdown')
+    expect(ipynb.cells[2].source.join('')).is.equal(`\`\`\`cpp
+int i=1;
+\`\`\``)
   })
   it('should convert an exercise guide to ipynb', async () => {
     const inputFile = path.join(__dirname, 'fixtures', 'intro-neo4j-guides-01.adoc')
